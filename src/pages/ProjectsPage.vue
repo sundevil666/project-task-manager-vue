@@ -2,7 +2,7 @@
   <div class="projects-page">
     <div class="projects-header">
       <h1>Projects</h1>
-      <button class="btn btn--primary">Добавить проект</button>
+      <button class="btn btn--primary" @click="openModal">Добавить проект</button>
     </div>
     
     <div class="projects-table-container">
@@ -15,19 +15,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="project in projects" :key="project.id">
-            <td>{{ project.id }}</td>
-            <td>{{ project.name }}</td>
-            <td>{{ project.taskCount }}</td>
-          </tr>
+          <ProjectRow 
+            v-for="project in projects" 
+            :key="project.id" 
+            :project="project" 
+          />
         </tbody>
       </table>
     </div>
+    
+    <AddProjectModal 
+      :is-open="isModalOpen" 
+      @close="closeModal" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import ProjectRow from '../components/ProjectRow.vue'
+import AddProjectModal from '../components/AddProjectModal.vue'
 
 interface Project {
   id: number
@@ -40,6 +47,16 @@ const projects = ref<Project[]>([
   { id: 2, name: 'Mobile App', taskCount: 8 },
   { id: 3, name: 'API Integration', taskCount: 5 }
 ])
+
+const isModalOpen = ref(false)
+
+const openModal = () => {
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+}
 </script>
 
 <style scoped>
@@ -97,6 +114,25 @@ const projects = ref<Project[]>([
   
   tbody tr:last-child td {
     border-bottom: none;
+  }
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.875rem;
+
+  &--primary {
+    background-color: #3b82f6;
+    color: white;
+
+    &:hover {
+      background-color: #2563eb;
+    }
   }
 }
 </style>
