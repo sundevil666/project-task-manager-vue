@@ -1,41 +1,45 @@
 <template>
   <div class="projects-page">
-    <h1>Projects</h1>
-    <div class="projects-list">
-      <div 
-        v-for="project in projects" 
-        :key="project.id"
-        class="project-card"
-        @click="goToProject(project.id)"
-      >
-        <h3>{{ project.name }}</h3>
-        <p>{{ project.description }}</p>
-      </div>
+    <div class="projects-header">
+      <h1>Projects</h1>
+      <button class="btn btn--primary">Добавить проект</button>
+    </div>
+    
+    <div class="projects-table-container">
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>ID проекта</th>
+            <th>Название проекта</th>
+            <th>Количество задач</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="project in projects" :key="project.id">
+            <td>{{ project.id }}</td>
+            <td>{{ project.name }}</td>
+            <td>{{ project.taskCount }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 
 interface Project {
   id: number
   name: string
-  description: string
+  taskCount: number
 }
 
 const projects = ref<Project[]>([
-  { id: 1, name: 'Website Redesign', description: 'Complete overhaul of company website' },
-  { id: 2, name: 'Mobile App', description: 'Native iOS and Android app development' },
-  { id: 3, name: 'API Integration', description: 'Third-party API integration project' }
+  { id: 1, name: 'Website Redesign', taskCount: 12 },
+  { id: 2, name: 'Mobile App', taskCount: 8 },
+  { id: 3, name: 'API Integration', taskCount: 5 }
 ])
-
-const goToProject = (id: number) => {
-  router.push(`/project/${id}`)
-}
 </script>
 
 <style scoped>
@@ -43,34 +47,56 @@ const goToProject = (id: number) => {
   padding: 2rem;
 }
 
-.projects-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
+.projects-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
 }
 
-.project-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.projects-table-container {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
 }
 
-.project-card:hover {
-  border-color: #42b883;
-  box-shadow: 0 4px 12px rgba(66, 184, 131, 0.15);
-}
-
-.project-card h3 {
-  margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-}
-
-.project-card p {
-  margin: 0;
-  color: #666;
-  font-size: 0.9rem;
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+  
+  th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+    color: #1f2937;
+  }
+  
+  td {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    color: #1f2937;
+  }
+  
+  tbody tr {
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: #f9fafb;
+    }
+  }
+  
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
 }
 </style>
