@@ -6,7 +6,10 @@
     </div>
     
     <div class="projects-table-container">
-      <table class="projects-table">
+      <div v-if="isLoading" class="loading-state">
+        Loading...
+      </div>
+      <table v-else class="projects-table">
         <thead>
           <tr>
             <th>ID проекта</th>
@@ -32,23 +35,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import ProjectRow from '../components/ProjectRow.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
+import { useProjectsStore } from '../store/projects'
+import { useAppStore } from '../store/index'
 
-interface Project {
-  id: number
-  name: string
-  taskCount: number
-}
+const projectsStore = useProjectsStore()
+const appStore = useAppStore()
 
-const projects = ref<Project[]>([
-  { id: 1, name: 'Website Redesign', taskCount: 12 },
-  { id: 2, name: 'Mobile App', taskCount: 8 },
-  { id: 3, name: 'API Integration', taskCount: 5 }
-])
+const { getAllProjects: projects } = storeToRefs(projectsStore)
+const { isLoading } = storeToRefs(appStore)
 
 const isModalOpen = ref(false)
+
+onMounted(async () => {
+  await projectsStore.fetchProjects()
+})
 
 const openModal = () => {
   isModalOpen.value = true
@@ -60,6 +64,13 @@ const closeModal = () => {
 </script>
 
 <style scoped>
+.loading-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
 .projects-page {
   padding: 2rem;
 }

@@ -75,13 +75,11 @@ export const mockApi = {
     if (projectIndex === -1) return false
     
     projects.splice(projectIndex, 1)
-    // Also delete all tasks for this project
     tasks = tasks.filter(t => t.projectId !== id)
     
     return true
   },
 
-  // Tasks API
   async getTasks(projectId?: number): Promise<Task[]> {
     await delay(250)
     
@@ -99,7 +97,6 @@ export const mockApi = {
   async createTask(taskData: CreateTaskRequest): Promise<Task> {
     await delay(350)
     
-    // Verify project exists
     const project = projects.find(p => p.id === taskData.projectId)
     if (!project) {
       throw new Error('Project not found')

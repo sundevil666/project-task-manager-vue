@@ -87,6 +87,5 @@ export const api = {
   }
 }
 
-// Export types for external use
 export type { Project, Task, CreateProjectRequest, CreateTaskRequest }
 export { apiClient }
