@@ -14,8 +14,10 @@
             v-model="formData.name"
             type="text"
             class="form-input"
+            :class="{ 'form-input--error': errors.name }"
             placeholder="Введите название проекта"
           />
+          <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
         </div>
         
         <div class="form-group">
@@ -33,8 +35,14 @@
           <button type="button" class="btn btn--secondary" @click="closeModal">
             Отмена
           </button>
-          <button type="button" class="btn btn--primary" @click="saveProject">
-            Сохранить
+          <button 
+            type="button" 
+            class="btn btn--primary" 
+            @click="saveProject"
+            :disabled="isSubmitting"
+          >
+            <span v-if="isSubmitting">Сохранение...</span>
+            <span v-else>Сохранить</span>
           </button>
         </div>
       </form>
@@ -44,8 +52,9 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { useProjectsStore } from '../store/projects'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
 }>()
 
@@ -53,22 +62,60 @@ const emit = defineEmits<{
   close: []
 }>()
 
+const projectsStore = useProjectsStore()
+
 const formData = reactive({
   name: '',
   description: ''
 })
 
-const closeModal = () => {
-  emit('close')
-  // Reset form
-  formData.name = ''
-  formData.description = ''
+const errors = reactive({
+  name: ''
+})
+
+const isSubmitting = ref(false)
+
+const validateForm = (): boolean => {
+  errors.name = ''
+  
+  if (!formData.name.trim()) {
+    errors.name = 'Название проекта обязательно для заполнения'
+    return false
+  }
+  
+  return true
 }
 
-const saveProject = () => {
-  // Visual only - no actual save logic
-  console.log('Project data:', formData)
-  closeModal()
+const closeModal = () => {
+  emit('close')
+  resetForm()
+}
+
+const resetForm = () => {
+  formData.name = ''
+  formData.description = ''
+  errors.name = ''
+}
+
+const saveProject = async () => {
+  if (!validateForm()) {
+    return
+  }
+  
+  isSubmitting.value = true
+  
+  try {
+    await projectsStore.addProject({
+      name: formData.name.trim(),
+      description: formData.description.trim()
+    })
+    
+    closeModal()
+  } catch (error) {
+    console.error('Failed to create project:', error)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -165,11 +212,26 @@ const saveProject = () => {
   &::placeholder {
     color: #9ca3af;
   }
+
+  &--error {
+    border-color: #ef4444;
+
+    &:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
 }
 
 .form-textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.form-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 .btn {
@@ -181,11 +243,16 @@ const saveProject = () => {
   border: none;
   font-size: 0.875rem;
 
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   &--primary {
     background-color: #3b82f6;
     color: white;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: #2563eb;
     }
   }
@@ -194,7 +261,7 @@ const saveProject = () => {
     background-color: #f3f4f6;
     color: #374151;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: #e5e7eb;
     }
   }
