@@ -34,3 +34,5 @@ export const useAppStore = defineStore('app', () => {
     clearError
   }
 })
+
+export { useProjectsStore } from './projects'
