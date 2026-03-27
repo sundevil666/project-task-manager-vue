@@ -215,6 +215,7 @@ const startWidth = ref(0)
 
 const setMode = (mode: 'table' | 'kanban') => {
   viewMode.value = mode
+  // No data refetching needed - both views use the same store
 }
 
 const project = computed((): IProject | null => {
@@ -235,16 +236,19 @@ const projectTasks = computed(() => taskStore.getTasksByProjectId(projectId.valu
 const isLoading = computed(() => taskStore.loading)
 const sort = computed(() => taskStore.sort)
 
-// Kanban tasks grouped by status
-const todoTasks = computed(() => 
-  projectTasks.value.filter(task => task.status === 'todo').sort((a, b) => a.order - b.order)
-)
-const inProgressTasks = computed(() => 
-  projectTasks.value.filter(task => task.status === 'in-progress').sort((a, b) => a.order - b.order)
-)
-const doneTasks = computed(() => 
-  projectTasks.value.filter(task => task.status === 'done').sort((a, b) => a.order - b.order)
-)
+// Kanban tasks grouped by status - using store getters
+const todoTasks = computed(() => {
+  const statusGroups = taskStore.getTasksByStatus.value
+  return statusGroups['todo'].filter(task => task.projectId === projectId.value)
+})
+const inProgressTasks = computed(() => {
+  const statusGroups = taskStore.getTasksByStatus.value
+  return statusGroups['in-progress'].filter(task => task.projectId === projectId.value)
+})
+const doneTasks = computed(() => {
+  const statusGroups = taskStore.getTasksByStatus.value
+  return statusGroups['done'].filter(task => task.projectId === projectId.value)
+})
 
 // Filter reactive refs
 const assigneeFilter = ref('')
@@ -317,6 +321,13 @@ onMounted(async () => {
   }
 })
 
+// Watch for project changes (not view mode changes)
+watch(() => route.params.id, async (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    await taskStore.fetchTasks(Number(newId))
+  }
+}, { immediate: false })
+
 const getStatusText = (status: string) => {
   switch (status) {
     case 'todo': return 'К выполнению'
@@ -344,56 +355,41 @@ const closeModal = () => {
   selectedTask.value = undefined
 }
 
-// Kanban drag & drop handlers
+// Kanban drag & drop handlers - simplified using store
 const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number) => {
   try {
     await taskStore.updateTask(taskId, { status: newStatus })
     
+    // Get all tasks for the project and reorder them
     const allTasks = taskStore.getTasksByProjectId(projectId.value)
-    const todoTasks = allTasks.filter(t => t.status === 'todo')
-    const inProgressTasks = allTasks.filter(t => t.status === 'in-progress')
-    const doneTasks = allTasks.filter(t => t.status === 'done')
+    const statusGroups = taskStore.getTasksByStatus.value
     
     const reorderedTasks: Task[] = []
     
+    // Helper to insert task at specific position
     const insertTaskAtPosition = (tasks: Task[], insertOrder: number) => {
       const movedTask = tasks.find(t => t.id === taskId)
-      if (!movedTask) {
-        return tasks
-      }
+      if (!movedTask) return tasks
       
       const newTasks = tasks.filter(t => t.id !== taskId)
       newTasks.splice(insertOrder, 0, movedTask)
-      
       return newTasks
     }
     
-    let newTodoTasks = [...todoTasks]
-    let newInProgressTasks = [...inProgressTasks]
-    let newDoneTasks = [...doneTasks]
+    // Reorder the target status column
+    const targetTasks = statusGroups[newStatus].filter(task => task.projectId === projectId.value)
+    const reorderedTargetTasks = insertTaskAtPosition(targetTasks, newOrder)
     
-    switch (newStatus) {
-      case 'todo':
-        newTodoTasks = insertTaskAtPosition(todoTasks, newOrder)
-        break
-      case 'in-progress':
-        newInProgressTasks = insertTaskAtPosition(inProgressTasks, newOrder)
-        break
-      case 'done':
-        newDoneTasks = insertTaskAtPosition(doneTasks, newOrder)
-        break
-    }
-    
-    newTodoTasks.forEach((task, index) => {
-      reorderedTasks.push({ ...task, order: index })
-    })
-    
-    newInProgressTasks.forEach((task, index) => {
-      reorderedTasks.push({ ...task, order: index })
-    })
-    
-    newDoneTasks.forEach((task, index) => {
-      reorderedTasks.push({ ...task, order: index })
+    // Build the complete reordered list
+    const allStatuses: Task['status'][] = ['todo', 'in-progress', 'done']
+    allStatuses.forEach(status => {
+      const statusTasks = status === newStatus 
+        ? reorderedTargetTasks
+        : statusGroups[status].filter(task => task.projectId === projectId.value)
+      
+      statusTasks.forEach((task, index) => {
+        reorderedTasks.push({ ...task, order: index })
+      })
     })
     
     await taskStore.reorderTasks(reorderedTasks)
@@ -404,42 +400,41 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
 
 const handleTaskReorder = async (taskId: number, newOrder: number) => {
   try {
-    const allTasks = taskStore.getTasksByProjectId(projectId.value)
-    const todoTasks = allTasks.filter(t => t.status === 'todo')
-    const inProgressTasks = allTasks.filter(t => t.status === 'in-progress')
-    const doneTasks = allTasks.filter(t => t.status === 'done')
-    
+    const statusGroups = taskStore.getTasksByStatus.value
     const reorderedTasks: Task[] = []
     
-    const reorderColumnTasks = (tasks: Task[]) => {
-      const movedTask = tasks.find(t => t.id === taskId)
-      if (!movedTask) {
-        return tasks
+    // Find which status the task belongs to
+    let taskStatus: Task['status'] | null = null
+    for (const [status, tasks] of Object.entries(statusGroups)) {
+      if (tasks.some(t => t.id === taskId)) {
+        taskStatus = status as Task['status']
+        break
       }
-      
-      const newTasks = [...tasks]
-      const currentIndex = newTasks.findIndex(t => t.id === taskId)
-      
-      newTasks.splice(currentIndex, 1)
-      newTasks.splice(newOrder, 0, movedTask)
-      
-      return newTasks
     }
     
-    const newTodoTasks = reorderColumnTasks(todoTasks)
-    const newInProgressTasks = reorderColumnTasks(inProgressTasks)
-    const newDoneTasks = reorderColumnTasks(doneTasks)
+    if (!taskStatus) return
     
-    newTodoTasks.forEach((task, index) => {
-      reorderedTasks.push({ ...task, order: index })
-    })
+    // Reorder tasks within the same status
+    const statusTasks = statusGroups[taskStatus].filter(task => task.projectId === projectId.value)
+    const movedTask = statusTasks.find(t => t.id === taskId)
+    if (!movedTask) return
     
-    newInProgressTasks.forEach((task, index) => {
-      reorderedTasks.push({ ...task, order: index })
-    })
+    const newTasks = [...statusTasks]
+    const currentIndex = newTasks.findIndex(t => t.id === taskId)
     
-    newDoneTasks.forEach((task, index) => {
-      reorderedTasks.push({ ...task, order: index })
+    newTasks.splice(currentIndex, 1)
+    newTasks.splice(newOrder, 0, movedTask)
+    
+    // Build the complete reordered list
+    const allStatuses: Task['status'][] = ['todo', 'in-progress', 'done']
+    allStatuses.forEach(status => {
+      const statusTasks = status === taskStatus 
+        ? newTasks
+        : statusGroups[status].filter(task => task.projectId === projectId.value)
+      
+      statusTasks.forEach((task, index) => {
+        reorderedTasks.push({ ...task, order: index })
+      })
     })
     
     await taskStore.reorderTasks(reorderedTasks)
