@@ -1,5 +1,5 @@
-import { mockProjects, Project } from '../mocks/projects'
-import { mockTasks, Task } from '../mocks/tasks'
+import { mockProjects, IProject } from '../mocks/projects'
+import { mockTasks, ITask } from '../mocks/tasks'
 
 const delay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -11,25 +11,25 @@ let nextTaskId = Math.max(...tasks.map(t => t.id)) + 1
 export interface CreateProjectRequest {
   name: string
   description: string
-  status?: Project['status']
+  status?: IProject['status']
 }
 
 export interface CreateTaskRequest {
   projectId: number
   title: string
   description: string
-  priority: Task['priority']
+  priority: ITask['priority']
   assignee?: string
   dueDate?: string
 }
 
 export const mockApi = {
-  async getProjects(): Promise<Project[]> {
+  async getProjects(): Promise<IProject[]> {
     await delay(300)
     return [...projects]
   },
 
-  async getProject(id: number): Promise<Project | null> {
+  async getProject(id: number): Promise<IProject | null> {
     await delay(200)
     const project = projects.find(p => p.id === id)
     if (!project) return null
@@ -42,10 +42,10 @@ export const mockApi = {
     }
   },
 
-  async createProject(projectData: CreateProjectRequest): Promise<Project> {
+  async createProject(projectData: CreateProjectRequest): Promise<IProject> {
     await delay(400)
     
-    const newProject: Project = {
+    const newProject: IProject = {
       id: nextProjectId++,
       name: projectData.name,
       description: projectData.description,
@@ -58,7 +58,7 @@ export const mockApi = {
     return newProject
   },
 
-  async updateProject(id: number, updates: Partial<Omit<Project, 'id' | 'createdDate' | 'taskCount'>>): Promise<Project | null> {
+  async updateProject(id: number, updates: Partial<Omit<IProject, 'id' | 'createdDate' | 'taskCount'>>): Promise<IProject | null> {
     await delay(300)
     
     const projectIndex = projects.findIndex(p => p.id === id)
@@ -80,7 +80,7 @@ export const mockApi = {
     return true
   },
 
-  async getTasks(projectId?: number): Promise<Task[]> {
+  async getTasks(projectId?: number): Promise<ITask[]> {
     await delay(250)
     
     if (projectId) {
@@ -89,12 +89,12 @@ export const mockApi = {
     return [...tasks]
   },
 
-  async getTask(id: number): Promise<Task | null> {
+  async getTask(id: number): Promise<ITask | null> {
     await delay(150)
     return tasks.find(t => t.id === id) || null
   },
 
-  async createTask(taskData: CreateTaskRequest): Promise<Task> {
+  async createTask(taskData: CreateTaskRequest): Promise<ITask> {
     await delay(350)
     
     const project = projects.find(p => p.id === taskData.projectId)
@@ -102,7 +102,7 @@ export const mockApi = {
       throw new Error('Project not found')
     }
     
-    const newTask: Task = {
+    const newTask: ITask = {
       id: nextTaskId++,
       projectId: taskData.projectId,
       title: taskData.title,
@@ -111,7 +111,8 @@ export const mockApi = {
       assignee: taskData.assignee,
       dueDate: taskData.dueDate,
       status: 'Pending',
-      createdDate: new Date().toISOString().split('T')[0]
+      createdDate: new Date().toISOString().split('T')[0],
+      order: tasks.filter(t => t.projectId === taskData.projectId).length
     }
     
     tasks.push(newTask)
@@ -124,7 +125,7 @@ export const mockApi = {
     return newTask
   },
 
-  async updateTask(id: number, updates: Partial<Omit<Task, 'id' | 'createdDate' | 'projectId'>>): Promise<Task | null> {
+  async updateTask(id: number, updates: Partial<Omit<ITask, 'id' | 'createdDate' | 'projectId'>>): Promise<ITask | null> {
     await delay(250)
     
     const taskIndex = tasks.findIndex(t => t.id === id)

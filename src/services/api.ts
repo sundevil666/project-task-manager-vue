@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
 import { mockApi, CreateProjectRequest, CreateTaskRequest } from './mockApi'
-import { Project } from '../mocks/projects'
-import { Task } from '../mocks/tasks'
+import { IProject } from '../mocks/projects'
+import { ITask } from '../mocks/tasks'
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: '/api',
@@ -31,22 +31,22 @@ const mockResponse = <T>(data: T): Promise<AxiosResponse<T>> => {
 }
 
 export const api = {
-  async getProjects(): Promise<AxiosResponse<Project[]>> {
+  async getProjects(): Promise<AxiosResponse<IProject[]>> {
     const projects = await mockApi.getProjects()
     return mockResponse(projects)
   },
 
-  async createProject(projectData: CreateProjectRequest): Promise<AxiosResponse<Project>> {
+  async createProject(projectData: CreateProjectRequest): Promise<AxiosResponse<IProject>> {
     const project = await mockApi.createProject(projectData)
     return mockResponse(project)
   },
 
-  async getProject(id: number): Promise<AxiosResponse<Project | null>> {
+  async getProject(id: number): Promise<AxiosResponse<IProject | null>> {
     const project = await mockApi.getProject(id)
     return mockResponse(project)
   },
 
-  async updateProject(id: number, updates: Partial<Omit<Project, 'id' | 'createdDate' | 'taskCount'>>): Promise<AxiosResponse<Project | null>> {
+  async updateProject(id: number, updates: Partial<Omit<IProject, 'id' | 'createdDate' | 'taskCount'>>): Promise<AxiosResponse<IProject | null>> {
     const project = await mockApi.updateProject(id, updates)
     return mockResponse(project)
   },
@@ -56,22 +56,22 @@ export const api = {
     return mockResponse(result)
   },
 
-  async getTasks(projectId?: number): Promise<AxiosResponse<Task[]>> {
+  async getTasks(projectId?: number): Promise<AxiosResponse<ITask[]>> {
     const tasks = await mockApi.getTasks(projectId)
     return mockResponse(tasks)
   },
 
-  async createTask(taskData: CreateTaskRequest): Promise<AxiosResponse<Task>> {
+  async createTask(taskData: CreateTaskRequest): Promise<AxiosResponse<ITask>> {
     const task = await mockApi.createTask(taskData)
     return mockResponse(task)
   },
 
-  async getTask(id: number): Promise<AxiosResponse<Task | null>> {
+  async getTask(id: number): Promise<AxiosResponse<ITask | null>> {
     const task = await mockApi.getTask(id)
     return mockResponse(task)
   },
 
-  async updateTask(id: number, updates: Partial<Omit<Task, 'id' | 'createdDate' | 'projectId'>>): Promise<AxiosResponse<Task | null>> {
+  async updateTask(id: number, updates: Partial<Omit<ITask, 'id' | 'createdDate' | 'projectId'>>): Promise<AxiosResponse<ITask | null>> {
     const task = await mockApi.updateTask(id, updates)
     return mockResponse(task)
   },
@@ -87,5 +87,5 @@ export const api = {
   }
 }
 
-export type { Project, Task, CreateProjectRequest, CreateTaskRequest }
+export type { IProject, ITask, CreateProjectRequest, CreateTaskRequest }
 export { apiClient }

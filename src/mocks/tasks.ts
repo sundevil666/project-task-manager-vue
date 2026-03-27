@@ -8,6 +8,7 @@ export interface ITask {
   assignee?: string
   dueDate?: string
   createdDate: string
+  order: number
 }
 
 export const mockTasks: ITask[] = [
@@ -20,7 +21,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'John Doe',
     dueDate: '2024-02-01',
-    createdDate: '2024-01-16'
+    createdDate: '2024-01-16',
+    order: 0
   },
   {
     id: 2,
@@ -31,7 +33,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Jane Smith',
     dueDate: '2024-02-15',
-    createdDate: '2024-01-17'
+    createdDate: '2024-01-17',
+    order: 1
   },
   {
     id: 3,
@@ -42,7 +45,8 @@ export const mockTasks: ITask[] = [
     priority: 'Medium',
     assignee: 'Mike Johnson',
     dueDate: '2024-02-20',
-    createdDate: '2024-01-18'
+    createdDate: '2024-01-18',
+    order: 2
   },
   {
     id: 4,
@@ -52,7 +56,8 @@ export const mockTasks: ITask[] = [
     status: 'Pending',
     priority: 'Medium',
     dueDate: '2024-02-25',
-    createdDate: '2024-01-19'
+    createdDate: '2024-01-19',
+    order: 3
   },
   
   // Mobile App Development Tasks
@@ -65,7 +70,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Sarah Wilson',
     dueDate: '2024-02-10',
-    createdDate: '2024-02-02'
+    createdDate: '2024-02-02',
+    order: 4
   },
   {
     id: 6,
@@ -76,7 +82,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Tom Brown',
     dueDate: '2024-02-20',
-    createdDate: '2024-02-03'
+    createdDate: '2024-02-03',
+    order: 5
   },
   {
     id: 7,
@@ -87,7 +94,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Alex Davis',
     dueDate: '2024-03-01',
-    createdDate: '2024-02-04'
+    createdDate: '2024-02-04',
+    order: 6
   },
   
   // API Integration Tasks
@@ -100,7 +108,8 @@ export const mockTasks: ITask[] = [
     priority: 'Medium',
     assignee: 'Chris Lee',
     dueDate: '2024-01-20',
-    createdDate: '2024-01-11'
+    createdDate: '2024-01-11',
+    order: 7
   },
   {
     id: 9,
@@ -111,7 +120,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Pat Kim',
     dueDate: '2024-01-25',
-    createdDate: '2024-01-12'
+    createdDate: '2024-01-12',
+    order: 8
   },
   {
     id: 10,
@@ -122,7 +132,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Sam Taylor',
     dueDate: '2024-01-30',
-    createdDate: '2024-01-13'
+    createdDate: '2024-01-13',
+    order: 9
   },
   
   // Database Migration Tasks
@@ -135,7 +146,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Jordan Martinez',
     dueDate: '2024-02-20',
-    createdDate: '2024-02-16'
+    createdDate: '2024-02-16',
+    order: 10
   },
   {
     id: 12,
@@ -146,7 +158,8 @@ export const mockTasks: ITask[] = [
     priority: 'High',
     assignee: 'Casey Robinson',
     dueDate: '2024-02-25',
-    createdDate: '2024-02-17'
+    createdDate: '2024-02-17',
+    order: 11
   },
   
   // Security Audit Tasks
@@ -159,7 +172,8 @@ export const mockTasks: ITask[] = [
     priority: 'Critical',
     assignee: 'Morgan Bailey',
     dueDate: '2024-03-10',
-    createdDate: '2024-03-02'
+    createdDate: '2024-03-02',
+    order: 12
   },
   {
     id: 14,
@@ -168,7 +182,9 @@ export const mockTasks: ITask[] = [
     description: 'Implement recommended security measures',
     status: 'Pending',
     priority: 'High',
+    assignee: 'Morgan Bailey',
     dueDate: '2024-03-20',
-    createdDate: '2024-03-03'
+    createdDate: '2024-03-03',
+    order: 13
   }
 ]
