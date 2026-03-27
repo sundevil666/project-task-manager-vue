@@ -2,7 +2,7 @@
 
 Сучасний додаток для управління проєктами та завданнями на Vue 3. Табличне та Kanban подання з drag-and-drop функціоналом.
 
-[GitHub Репозиторій](https://github.com/sundevil666/project-task-manager-vue)
+[GitHub Репозиторій](https://github.com/sundevil666/project-task-manager-vue) • [Живе демо](https://sundevil666.github.io/project-task-manager-vue/#/)
 
 <p align="center">
   <img src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
@@ -63,7 +63,7 @@ npm run test:ui    # Запуск з UI
 
 ## Демо
 
-*Живе демо з'явиться скоро*
+**[Живе демо →](https://sundevil666.github.io/project-task-manager-vue/#/)**
 
 ## Деплой
 

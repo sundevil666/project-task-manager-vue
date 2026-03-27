@@ -2,7 +2,7 @@
 
 A modern project and task management application built with Vue 3. Features flexible Table and Kanban views with drag-and-drop functionality.
 
-[GitHub Repository](https://github.com/sundevil666/project-task-manager-vue)
+[GitHub Repository](https://github.com/sundevil666/project-task-manager-vue) • [Live Demo](https://sundevil666.github.io/project-task-manager-vue/#/)
 
 <p align="center">
   <img src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
@@ -63,7 +63,7 @@ npm run test:ui    # Run tests with UI
 
 ## Demo
 
-*Live demo coming soon*
+**[Live Demo →](https://sundevil666.github.io/project-task-manager-vue/#/)**
 
 ## Deployment
 
