@@ -4,33 +4,36 @@
       <h1>Projects</h1>
       <button class="btn btn--primary" @click="openModal">Добавить проект</button>
     </div>
-    
-    <div class="projects-table-container">
-      <div v-if="isLoading" class="loading-state">
-        Loading...
+
+    <div class="dashboard">
+      <TaskStatusChart class="chart-section" />
+      <div class="projects-table-container">
+        <div v-if="isLoading" class="loading-state">
+          Loading...
+        </div>
+        <table v-else class="projects-table">
+          <thead>
+            <tr>
+              <th>ID проекта</th>
+              <th>Название проекта</th>
+              <th>Количество задач</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ProjectRow
+              v-for="project in projects"
+              :key="project.id"
+              :project="project"
+            />
+          </tbody>
+        </table>
       </div>
-      <table v-else class="projects-table">
-        <thead>
-          <tr>
-            <th>ID проекта</th>
-            <th>Название проекта</th>
-            <th>Количество задач</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ProjectRow 
-            v-for="project in projects" 
-            :key="project.id" 
-            :project="project" 
-          />
-        </tbody>
-      </table>
     </div>
-    
-    <AddProjectModal 
-      :is-open="isModalOpen" 
-      @close="closeModal" 
+
+    <AddProjectModal
+      :is-open="isModalOpen"
+      @close="closeModal"
     />
   </div>
 </template>
@@ -40,10 +43,13 @@ import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import ProjectRow from '../components/ProjectRow.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
+import TaskStatusChart from '../components/TaskStatusChart.vue'
 import { useProjectsStore } from '../store/projects'
+import { useTaskStore } from '../store/tasks'
 import { useAppStore } from '../store/index'
 
 const projectsStore = useProjectsStore()
+const taskStore = useTaskStore()
 const appStore = useAppStore()
 
 const { getAllProjects: projects } = storeToRefs(projectsStore)
@@ -52,7 +58,10 @@ const { isLoading } = storeToRefs(appStore)
 const isModalOpen = ref(false)
 
 onMounted(async () => {
-  await projectsStore.fetchProjects()
+  await Promise.all([
+    projectsStore.fetchProjects(),
+    taskStore.fetchTasks()
+  ])
 })
 
 const openModal = () => {
@@ -81,11 +90,30 @@ const closeModal = () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
+  }
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-section {
+  @media (max-width: 1024px) {
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
   }
 }
 
