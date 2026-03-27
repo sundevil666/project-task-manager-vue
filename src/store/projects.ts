@@ -30,11 +30,11 @@ export const useProjectsStore = defineStore('projects', () => {
 
   // Seed demo data on first visit
   const seedData = () => {
-    const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_DATA)
+    const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_PROJECTS)
     if (!hasSeeded && projects.value.length === 0) {
       projects.value = [...mockProjects]
       saveToStorage()
-      localStorageHelper.set(LS_KEYS.HAS_SEEDED_DATA, true)
+      localStorageHelper.set(LS_KEYS.HAS_SEEDED_PROJECTS, true)
     }
   }
   seedData()

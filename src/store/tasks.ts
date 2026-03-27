@@ -92,7 +92,7 @@ export const useTaskStore = defineStore('tasks', () => {
 
   // Seed demo data on first visit
   const seedData = () => {
-    const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_DATA)
+    const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_TASKS)
     if (!hasSeeded && tasks.value.length === 0) {
       const seededTasks = mockTasks.map(task => ({
         ...task,
@@ -101,6 +101,7 @@ export const useTaskStore = defineStore('tasks', () => {
       }))
       tasks.value = seededTasks
       saveToStorage()
+      localStorageHelper.set(LS_KEYS.HAS_SEEDED_TASKS, true)
     }
   }
   seedData()
