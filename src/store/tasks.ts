@@ -282,6 +282,33 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
+  const deleteTasksByProjectId = async (projectId: number) => {
+    loading.value = true
+    try {
+      // Delete all tasks for the project
+      const tasksToDelete = tasks.value.filter(task => task.projectId === projectId)
+      
+      for (const task of tasksToDelete) {
+        try {
+          await api.deleteTask(task.id)
+        } catch (error) {
+          console.error(`Failed to delete task ${task.id}:`, error)
+        }
+      }
+      
+      // Remove from local state
+      tasks.value = tasks.value.filter(task => task.projectId !== projectId)
+      saveToStorage()
+      
+      return true
+    } catch (error) {
+      console.error('Failed to delete project tasks:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
   const reorderTasks = async (reorderedTasks: Task[]) => {
     loading.value = true
     try {
@@ -371,6 +398,7 @@ export const useTaskStore = defineStore('tasks', () => {
     addTask,
     updateTask,
     deleteTask,
+    deleteTasksByProjectId,
     reorderTasks,
     setFilters,
     clearFilters,

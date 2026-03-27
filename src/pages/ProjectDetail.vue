@@ -2,7 +2,10 @@
   <div class="project-detail">
     <div class="header">
       <button @click="goBack" class="back-button">← Назад</button>
-      <h1>{{ project?.name }}</h1>
+      <div class="header-content">
+        <h1>{{ project?.name }}</h1>
+        <button @click="confirmDeleteProject" class="delete-button">🗑️ Удалить проект</button>
+      </div>
     </div>
     
     <div v-if="project" class="project-content">
@@ -175,29 +178,72 @@
       :project-id="projectId"
       @close="closeModal"
     />
+    
+    <!-- Delete Project Confirmation Modal -->
+    <div v-if="showDeleteConfirm" class="modal-overlay">
+      <div class="confirm-modal">
+        <h3>Удалить проект?</h3>
+        <p>Вы уверены, что хотите удалить проект "{{ project?.name }}"?</p>
+        <p class="warning">⚠️ Все задачи в этом проекте также будут удалены!</p>
+        <div class="modal-actions">
+          <button @click="cancelDeleteProject" class="cancel-btn">Отмена</button>
+          <button @click="deleteProject" class="confirm-delete-btn">Удалить</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { mockProjects } from '../mocks/projects'
 import { useTaskStore } from '../store/tasks'
+import { useProjectsStore } from '../store/projects'
 import TaskModal from '../components/TaskModal.vue'
 import KanbanColumn from '../components/KanbanColumn.vue'
 import type { IProject } from '../types'
 import type { Task } from '../store/tasks'
+import { localStorageHelper, LS_KEYS } from '../utils/localStorage'
 
 const router = useRouter()
 const route = useRoute()
 const taskStore = useTaskStore()
+const projectsStore = useProjectsStore()
 
 const viewMode = ref<'table' | 'kanban'>('table')
+
+// Initialize view mode from LocalStorage
+const initializeViewMode = () => {
+  const savedMode = localStorageHelper.get<'table' | 'kanban'>(LS_KEYS.VIEW_MODE)
+  if (savedMode) {
+    viewMode.value = savedMode
+  }
+}
+
+// Save view mode to LocalStorage
+const saveViewMode = () => {
+  localStorageHelper.set(LS_KEYS.VIEW_MODE, viewMode.value)
+}
+
+// Initialize on mount
+onMounted(async () => {
+  initializeViewMode()
+  
+  // Initialize projects and tasks data
+  await projectsStore.fetchProjects()
+  await taskStore.fetchTasks(projectId.value)
+})
+
+// Watch for view mode changes
+watch(viewMode, saveViewMode)
 
 // Modal state
 const isModalOpen = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
 const selectedTask = ref<Task | undefined>()
+
+// Delete project state
+const showDeleteConfirm = ref(false)
 
 // Column widths for resizing
 const columnWidths = ref({
@@ -218,17 +264,9 @@ const setMode = (mode: 'table' | 'kanban') => {
   // No data refetching needed - both views use the same store
 }
 
-const project = computed((): IProject | null => {
+const project = computed(() => {
   const projectId = Number(route.params.id)
-  const project = mockProjects.find(p => p.id === projectId)
-  
-  if (project) {
-    return {
-      ...project,
-    }
-  }
-  
-  return null
+  return projectsStore.getProjectById(projectId)
 })
 
 const projectId = computed(() => Number(route.params.id))
@@ -236,18 +274,30 @@ const projectTasks = computed(() => taskStore.getTasksByProjectId(projectId.valu
 const isLoading = computed(() => taskStore.loading)
 const sort = computed(() => taskStore.sort)
 
-// Kanban tasks grouped by status - using store getters
+// Kanban tasks grouped by status - using project tasks and applying filters
 const todoTasks = computed(() => {
-  const statusGroups = taskStore.getTasksByStatus.value
-  return statusGroups['todo'].filter(task => task.projectId === projectId.value)
+  // Skip entire column if status filter is set to something else
+  if (statusFilter.value && statusFilter.value !== 'todo') return []
+  
+  return projectTasks.value
+    .filter((task: Task) => task.status === 'todo')
+    .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
 })
 const inProgressTasks = computed(() => {
-  const statusGroups = taskStore.getTasksByStatus.value
-  return statusGroups['in-progress'].filter(task => task.projectId === projectId.value)
+  // Skip entire column if status filter is set to something else
+  if (statusFilter.value && statusFilter.value !== 'in-progress') return []
+  
+  return projectTasks.value
+    .filter((task: Task) => task.status === 'in-progress')
+    .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
 })
 const doneTasks = computed(() => {
-  const statusGroups = taskStore.getTasksByStatus.value
-  return statusGroups['done'].filter(task => task.projectId === projectId.value)
+  // Skip entire column if status filter is set to something else
+  if (statusFilter.value && statusFilter.value !== 'done') return []
+  
+  return projectTasks.value
+    .filter((task: Task) => task.status === 'done')
+    .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
 })
 
 // Filter reactive refs
@@ -355,14 +405,46 @@ const closeModal = () => {
   selectedTask.value = undefined
 }
 
-// Kanban drag & drop handlers - simplified using store
+// Delete project functions
+const confirmDeleteProject = () => {
+  showDeleteConfirm.value = true
+}
+
+const cancelDeleteProject = () => {
+  showDeleteConfirm.value = false
+}
+
+const deleteProject = async () => {
+  if (!project.value) return
+  
+  try {
+    // Delete all tasks for this project
+    await taskStore.deleteTasksByProjectId(project.value.id)
+    
+    // Delete the project
+    await projectsStore.deleteProject(project.value.id)
+    
+    // Redirect to projects page
+    router.push('/')
+  } catch (error) {
+    console.error('Failed to delete project:', error)
+  }
+}
+
+// Kanban drag & drop handlers
 const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number) => {
   try {
     await taskStore.updateTask(taskId, { status: newStatus })
     
-    // Get all tasks for the project and reorder them
-    const allTasks = taskStore.getTasksByProjectId(projectId.value)
-    const statusGroups = taskStore.getTasksByStatus.value
+    // Use projectTasks
+    const allProjectTasks = projectTasks.value
+    
+    // Group tasks by status for this project
+    const statusGroups = {
+      'todo': allProjectTasks.filter(t => t.status === 'todo'),
+      'in-progress': allProjectTasks.filter(t => t.status === 'in-progress'),
+      'done': allProjectTasks.filter(t => t.status === 'done')
+    }
     
     const reorderedTasks: Task[] = []
     
@@ -400,7 +482,16 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
 
 const handleTaskReorder = async (taskId: number, newOrder: number) => {
   try {
-    const statusGroups = taskStore.getTasksByStatus.value
+    // Use projectTasks
+    const allProjectTasks = projectTasks.value
+    
+    // Group tasks by status for this project
+    const statusGroups = {
+      'todo': allProjectTasks.filter(t => t.status === 'todo'),
+      'in-progress': allProjectTasks.filter(t => t.status === 'in-progress'),
+      'done': allProjectTasks.filter(t => t.status === 'done')
+    }
+    
     const reorderedTasks: Task[] = []
     
     // Find which status the task belongs to
@@ -415,7 +506,7 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     if (!taskStatus) return
     
     // Reorder tasks within the same status
-    const statusTasks = statusGroups[taskStatus].filter(task => task.projectId === projectId.value)
+    const statusTasks = statusGroups[taskStatus]
     const movedTask = statusTasks.find(t => t.id === taskId)
     if (!movedTask) return
     
@@ -430,7 +521,7 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     allStatuses.forEach(status => {
       const statusTasks = status === taskStatus 
         ? newTasks
-        : statusGroups[status].filter(task => task.projectId === projectId.value)
+        : statusGroups[status]
       
       statusTasks.forEach((task, index) => {
         reorderedTasks.push({ ...task, order: index })
@@ -458,6 +549,14 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
 .header {
   margin-bottom: 2rem;
   
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    justify-content: space-between;
+  }
+  
   .back-button {
     background: none;
     border: none;
@@ -471,6 +570,20 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     
     &:hover {
       background-color: rgba(66, 184, 131, 0.1);
+    }
+  }
+  
+  .delete-button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    
+    &:hover {
+      background: #dc2626;
     }
   }
   
@@ -750,6 +863,76 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
   p {
     color: #666;
     margin: 0 0 2rem 0;
+  }
+}
+
+// Delete confirmation modal styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  max-width: 400px;
+  width: 90%;
+  
+  h3 {
+    margin: 0 0 1rem 0;
+    color: #1f2937;
+  }
+  
+  p {
+    margin: 0.5rem 0;
+    color: #6b7280;
+    
+    &.warning {
+      color: #ef4444;
+      font-weight: 500;
+    }
+  }
+  
+  .modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+  }
+  
+  .cancel-btn {
+    background: #f3f4f6;
+    color: #374151;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    
+    &:hover {
+      background: #e5e7eb;
+    }
+  }
+  
+  .confirm-delete-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    
+    &:hover {
+      background: #dc2626;
+    }
   }
 }
 </style>

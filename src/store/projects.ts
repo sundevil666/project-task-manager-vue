@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api, type Project, type CreateProjectRequest } from '../services/api'
+import { api, type IProject, type CreateProjectRequest } from '../services/api'
 import { useAppStore } from './index'
 import { createPersistence, LS_KEYS } from '../utils/localStorage'
 
 export const useProjectsStore = defineStore('projects', () => {
   // State
-  const projects = ref<Project[]>([])
+  const projects = ref<IProject[]>([])
 
   // Create persistence utility
   const persistence = createPersistence(
@@ -70,6 +70,25 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
+  const deleteProject = async (projectId: number) => {
+    const appStore = useAppStore()
+    appStore.setLoading(true)
+    try {
+      await api.deleteProject(projectId)
+      const index = projects.value.findIndex(project => project.id === projectId)
+      if (index > -1) {
+        projects.value.splice(index, 1)
+        saveToStorage()
+      }
+      return true
+    } catch (error) {
+      console.error('Error deleting project:', error)
+      throw error
+    } finally {
+      appStore.setLoading(false)
+    }
+  }
+
   return {
     // State
     projects,
@@ -81,6 +100,7 @@ export const useProjectsStore = defineStore('projects', () => {
     // Actions
     fetchProjects,
     addProject,
+    deleteProject,
     
     // Internal methods (for hydration)
     initializeFromStorage,

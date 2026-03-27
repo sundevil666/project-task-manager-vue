@@ -56,7 +56,8 @@ export const localStorageHelper = {
 // LocalStorage keys
 export const LS_KEYS = {
   PROJECTS: 'projects',
-  TASKS: 'tasks'
+  TASKS: 'tasks',
+  VIEW_MODE: 'view_mode'
 } as const
 
 /**
