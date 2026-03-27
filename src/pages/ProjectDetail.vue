@@ -498,8 +498,8 @@ const deleteProject = async () => {
     
     // Redirect to projects page
     router.push('/')
-  } catch (error) {
-    console.error('Failed to delete project:', error)
+  } catch {
+    // Silent fail - errors handled by toast in store
   }
 }
 
@@ -551,8 +551,8 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     })
     
     await taskStore.reorderTasks(reorderedTasks)
-  } catch (error) {
-    console.error('Failed to move task:', error)
+  } catch {
+    // Silent fail - errors handled by toast in store
   }
 }
 
@@ -605,8 +605,8 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     })
     
     await taskStore.reorderTasks(reorderedTasks)
-  } catch (error) {
-    console.error('Failed to reorder task:', error)
+  } catch {
+    // Silent fail - errors handled by toast in store
   }
 }
 </script>

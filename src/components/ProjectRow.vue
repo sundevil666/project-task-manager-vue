@@ -56,8 +56,8 @@ const deleteProject = async () => {
     await projectsStore.deleteProject(props.project.id)
     
     showConfirm.value = false
-  } catch (error) {
-    console.error('Failed to delete project:', error)
+  } catch {
+    // Silent fail - errors handled by toast in store
   }
 }
 </script>

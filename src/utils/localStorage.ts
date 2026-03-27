@@ -11,8 +11,7 @@ export const localStorageHelper = {
       const item = localStorage.getItem(key)
       if (item === null) return null
       return JSON.parse(item) as T
-    } catch (error) {
-      console.error(`Error parsing LocalStorage key "${key}":`, error)
+    } catch {
       // Remove corrupted data
       localStorage.removeItem(key)
       return null
@@ -25,8 +24,8 @@ export const localStorageHelper = {
   set<T>(key: string, value: T): void {
     try {
       localStorage.setItem(key, JSON.stringify(value))
-    } catch (error) {
-      console.error(`Error setting LocalStorage key "${key}":`, error)
+    } catch {
+      // Silent fail for LocalStorage set errors
     }
   },
 
@@ -36,8 +35,8 @@ export const localStorageHelper = {
   remove(key: string): void {
     try {
       localStorage.removeItem(key)
-    } catch (error) {
-      console.error(`Error removing LocalStorage key "${key}":`, error)
+    } catch {
+      // Silent fail for LocalStorage remove errors
     }
   },
 
@@ -47,8 +46,8 @@ export const localStorageHelper = {
   clear(): void {
     try {
       localStorage.clear()
-    } catch (error) {
-      console.error('Error clearing LocalStorage:', error)
+    } catch {
+      // Silent fail for LocalStorage clear errors
     }
   }
 }

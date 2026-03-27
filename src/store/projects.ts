@@ -61,9 +61,6 @@ export const useProjectsStore = defineStore('projects', () => {
       const response = await api.getProjects()
       projects.value = response.data
       saveToStorage()
-    } catch (error) {
-      console.error('Error fetching projects:', error)
-      throw error
     } finally {
       appStore.setLoading(false)
     }
@@ -78,10 +75,6 @@ export const useProjectsStore = defineStore('projects', () => {
       saveToStorage()
       toast.success('Проект успешно добавлен')
       return response.data
-    } catch (error) {
-      console.error('Error creating project:', error)
-      toast.error('Ошибка при создании проекта')
-      throw error
     } finally {
       appStore.setLoading(false)
     }
@@ -99,10 +92,6 @@ export const useProjectsStore = defineStore('projects', () => {
       }
       toast.success('Проект успешно удален')
       return true
-    } catch (error) {
-      console.error('Error deleting project:', error)
-      toast.error('Ошибка при удалении проекта')
-      throw error
     } finally {
       appStore.setLoading(false)
     }

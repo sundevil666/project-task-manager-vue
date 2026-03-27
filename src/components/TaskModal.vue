@@ -215,8 +215,8 @@ const handleSubmit = async () => {
     }
 
     closeModal()
-  } catch (error) {
-    console.error('Failed to save task:', error)
+  } catch {
+    // Silent fail - errors handled by toast in store
   } finally {
     isLoading.value = false
   }

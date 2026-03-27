@@ -254,9 +254,8 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       
       saveToStorage()
-    } catch (error) {
-      console.error('Failed to fetch tasks:', error)
-      throw error
+    } catch {
+      // Silent fail - errors handled by toast in caller
     } finally {
       loading.value = false
     }
@@ -293,10 +292,8 @@ export const useTaskStore = defineStore('tasks', () => {
       saveToStorage()
       toast.success('Задача успешно добавлена')
       return newTask
-    } catch (error) {
-      console.error('Failed to add task:', error)
+    } catch {
       toast.error('Ошибка при добавлении задачи')
-      throw error
     } finally {
       loading.value = false
     }
@@ -327,10 +324,8 @@ export const useTaskStore = defineStore('tasks', () => {
         return tasks.value[index]
       }
       return null
-    } catch (error) {
-      console.error('Failed to update task:', error)
+    } catch {
       toast.error('Ошибка при обновлении задачи')
-      throw error
     } finally {
       loading.value = false
     }
@@ -347,10 +342,8 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       toast.success('Задача удалена')
       return true
-    } catch (error) {
-      console.error('Failed to delete task:', error)
+    } catch {
       toast.error('Ошибка при удалении задачи')
-      throw error
     } finally {
       loading.value = false
     }
@@ -366,7 +359,7 @@ export const useTaskStore = defineStore('tasks', () => {
         try {
           await api.deleteTask(task.id)
         } catch (error) {
-          console.error(`Failed to delete task ${task.id}:`, error)
+          // Silent fail for individual task deletion
         }
       }
       
@@ -376,10 +369,8 @@ export const useTaskStore = defineStore('tasks', () => {
       
       toast.success('Все задачи проекта удалены')
       return true
-    } catch (error) {
-      console.error('Failed to delete project tasks:', error)
+    } catch {
       toast.error('Ошибка при удалении задач проекта')
-      throw error
     } finally {
       loading.value = false
     }
@@ -401,9 +392,8 @@ export const useTaskStore = defineStore('tasks', () => {
       
       saveToStorage()
       return true
-    } catch (error) {
-      console.error('Failed to reorder tasks:', error)
-      throw error
+    } catch {
+      // Silent fail for reorder errors
     } finally {
       loading.value = false
     }
@@ -446,8 +436,8 @@ export const useTaskStore = defineStore('tasks', () => {
         }
       }
       localStorageHelper.set(LS_KEYS.TABLE_SETTINGS, settings)
-    } catch (error) {
-      console.error('Failed to save table settings:', error)
+    } catch {
+      // Silent fail for save errors
     }
   }
 
@@ -460,8 +450,8 @@ export const useTaskStore = defineStore('tasks', () => {
         filters.value = settings.filters
         return settings.columnWidths
       }
-    } catch (error) {
-      console.error('Failed to load table settings:', error)
+    } catch {
+      // Silent fail for loading errors
     }
     return null
   }

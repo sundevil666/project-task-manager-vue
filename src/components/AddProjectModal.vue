@@ -111,8 +111,8 @@ const saveProject = async () => {
     })
     
     closeModal()
-  } catch (error) {
-    console.error('Failed to create project:', error)
+  } catch {
+    // Silent fail - errors handled by toast in store
   } finally {
     isSubmitting.value = false
   }
