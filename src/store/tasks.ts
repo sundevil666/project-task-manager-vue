@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../services/api'
 import type { ITask as ApiTask, CreateTaskRequest } from '../services/api'
+import { createPersistence, LS_KEYS } from '../utils/localStorage'
 
 // Enhanced Task interface matching requirements
 export interface Task extends Omit<ApiTask, 'status'> {
@@ -33,6 +34,22 @@ export const useTaskStore = defineStore('tasks', () => {
   const loading = ref(false)
   const filters = ref<TaskFilters>({})
   const sort = ref<TaskSort>({ column: 'status', direction: 'asc' })
+
+  // Create persistence utility
+  const persistence = createPersistence(
+    LS_KEYS.TASKS,
+    () => tasks.value,
+    (state) => { tasks.value = state }
+  )
+
+  // Initialize from LocalStorage
+  const initializeFromStorage = () => persistence.initialize()
+
+  // Save to LocalStorage
+  const saveToStorage = () => persistence.save()
+
+  // Initialize on store creation
+  initializeFromStorage()
 
   // Getters
   const getTasksByProjectId = computed(() => {
@@ -144,6 +161,14 @@ export const useTaskStore = defineStore('tasks', () => {
   // Actions
   const fetchTasks = async (projectId?: number) => {
     loading.value = true
+    
+    // Try to load from LocalStorage first
+    const hasStoredData = initializeFromStorage()
+    if (hasStoredData && projectId === undefined) {
+      loading.value = false
+      return
+    }
+    
     try {
       const response = await api.getTasks(projectId)
       const fetchedTasks = response.data.map(task => ({
@@ -160,6 +185,8 @@ export const useTaskStore = defineStore('tasks', () => {
         // Replace all tasks
         tasks.value = fetchedTasks
       }
+      
+      saveToStorage()
     } catch (error) {
       console.error('Failed to fetch tasks:', error)
       throw error
@@ -196,6 +223,7 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       
       tasks.value.push(newTask)
+      saveToStorage()
       return newTask
     } catch (error) {
       console.error('Failed to add task:', error)
@@ -223,6 +251,7 @@ export const useTaskStore = defineStore('tasks', () => {
             status: mapApiStatusToTaskStatus(response.data.status),
             order: tasks.value[index].order // Preserve existing order
           }
+          saveToStorage()
         }
         return tasks.value[index]
       }
@@ -242,6 +271,7 @@ export const useTaskStore = defineStore('tasks', () => {
       const index = tasks.value.findIndex(task => task.id === id)
       if (index > -1) {
         tasks.value.splice(index, 1)
+        saveToStorage()
       }
       return true
     } catch (error) {
@@ -271,6 +301,7 @@ export const useTaskStore = defineStore('tasks', () => {
         return a.order - b.order
       })
       
+      saveToStorage()
       return true
     } catch (error) {
       console.error('Failed to reorder tasks:', error)
@@ -344,6 +375,10 @@ export const useTaskStore = defineStore('tasks', () => {
     setFilters,
     clearFilters,
     setSort,
-    toggleSort
+    toggleSort,
+    
+    // Internal methods (for hydration)
+    initializeFromStorage,
+    saveToStorage
   }
 })
