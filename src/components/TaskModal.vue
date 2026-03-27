@@ -2,32 +2,32 @@
   <div v-if="isOpen" class="modal-overlay" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
-        <h2>{{ isEditMode ? 'Редактировать задачу' : 'Создать задачу' }}</h2>
+        <h2>{{ isEditMode ? 'Редагувати задачу' : 'Створити задачу' }}</h2>
         <button @click="closeModal" class="close-btn">&times;</button>
       </div>
       
       <form @submit.prevent="handleSubmit" class="task-form">
         <div class="form-group">
-          <label for="title">Название задачи *</label>
+          <label for="title">Назва задачі *</label>
           <input
             id="title"
             v-model="formData.title"
             type="text"
             :class="['form-input', { 'error': errors.title }]"
-            placeholder="Введите название задачи"
+            placeholder="Введіть назву задачі"
             @blur="validateField('title')"
           />
           <span v-if="errors.title" class="error-message">{{ errors.title }}</span>
         </div>
         
         <div class="form-group">
-          <label for="assignee">Исполнитель</label>
+          <label for="assignee">Виконавець</label>
           <input
             id="assignee"
             v-model="formData.assignee"
             type="text"
             class="form-input"
-            placeholder="Введите имя исполнителя"
+            placeholder="Введіть ім'я виконавця"
           />
         </div>
         
@@ -39,16 +39,16 @@
             :class="['form-select', { 'error': errors.status }]"
             @blur="validateField('status')"
           >
-            <option value="">Выберите статус</option>
-            <option value="todo">К выполнению</option>
-            <option value="in-progress">В работе</option>
+            <option value="">Оберіть статус</option>
+            <option value="todo">До виконання</option>
+            <option value="in-progress">В роботі</option>
             <option value="done">Завершено</option>
           </select>
           <span v-if="errors.status" class="error-message">{{ errors.status }}</span>
         </div>
         
         <div class="form-group">
-          <label for="dueDate">Срок выполнения</label>
+          <label for="dueDate">Термін виконання</label>
           <input
             id="dueDate"
             v-model="formData.dueDate"
@@ -58,7 +58,7 @@
             @blur="validateField('dueDate')"
           />
           <span v-if="errors.dueDate" class="error-message">{{ errors.dueDate }}</span>
-          <span v-if="isEditMode" class="field-hint">Дата не изменяется при редактировании</span>
+          <span v-if="isEditMode" class="field-hint">Дата не змінюється при редагуванні</span>
         </div>
         
         <div class="form-actions">
@@ -68,7 +68,7 @@
             class="btn btn-secondary"
             :disabled="isLoading"
           >
-            Отмена
+            Скасувати
           </button>
           <button
             type="submit"
@@ -76,7 +76,7 @@
             :disabled="hasErrors || isLoading"
           >
             <span v-if="isLoading" class="loading-spinner"></span>
-            {{ isLoading ? 'Сохранение...' : 'Сохранить' }}
+            {{ isLoading ? 'Збереження...' : 'Зберегти' }}
           </button>
         </div>
       </form>
@@ -126,17 +126,17 @@ const validateField = (field: string) => {
   switch (field) {
     case 'title':
       if (!formData.value.title.trim()) {
-        error.title = 'Название задачи обязательно'
+        error.title = 'Назва задачі обов\'язкова'
       } else if (formData.value.title.trim().length < 3) {
-        error.title = 'Минимальная длина - 3 символа'
+        error.title = 'Мінімальна довжина - 3 символи'
       } else if (formData.value.title.trim().length > 120) {
-        error.title = 'Максимальная длина - 120 символов'
+        error.title = 'Максимальна довжина - 120 символів'
       }
       break
       
     case 'status':
       if (!formData.value.status) {
-        error.status = 'Статус обязателен'
+        error.status = 'Статус обов\'язковий'
       }
       break
       
@@ -147,7 +147,7 @@ const validateField = (field: string) => {
         today.setHours(0, 0, 0, 0)
         
         if (selectedDate < today) {
-          error.dueDate = 'Дата не может быть меньше текущей'
+          error.dueDate = 'Дата не може бути меншою за поточну'
         }
       }
       break

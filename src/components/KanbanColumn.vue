@@ -34,7 +34,7 @@
     </draggable>
     
     <div v-if="tasks.length === 0" class="empty-column">
-      <p>Нет задач</p>
+      <p>Немає задач</p>
     </div>
   </div>
 </template>
@@ -81,7 +81,7 @@ const openEditModal = (task: Task) => {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('ru-RU', {
+  return date.toLocaleDateString('uk-UA', {
     day: '2-digit',
     month: '2-digit'
   })

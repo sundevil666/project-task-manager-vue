@@ -10,12 +10,12 @@
   
   <div v-if="showConfirm" class="modal-overlay">
     <div class="confirm-modal">
-      <h3>Удалить проект?</h3>
-      <p>Вы уверены, что хотите удалить проект "{{ project.name }}"?</p>
-      <p class="warning">⚠️ Все задачи в этом проекте также будут удалены!</p>
+      <h3>Видалити проєкт?</h3>
+      <p>Ви впевнені, що хочете видалити проєкт "{{ project.name }}"?</p>
+      <p class="warning">⚠️ Всі задачі в цьому проєкті також будуть видалені!</p>
       <div class="modal-actions">
-        <button @click="cancelDelete" class="cancel-btn">Отмена</button>
-        <button @click="deleteProject" class="confirm-delete-btn">Удалить</button>
+        <button @click="cancelDelete" class="cancel-btn">Скасувати</button>
+        <button @click="deleteProject" class="confirm-delete-btn">Видалити</button>
       </div>
     </div>
   </div>
@@ -23,7 +23,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useProjectsStore } from '../store/projects'
 import { useTaskStore } from '../store/tasks'
 import type { IProject } from '../types'
@@ -32,7 +31,6 @@ const props = defineProps<{
   project: IProject
 }>()
 
-const router = useRouter()
 const projectsStore = useProjectsStore()
 const taskStore = useTaskStore()
 

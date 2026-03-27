@@ -2,38 +2,38 @@
   <div v-if="isOpen" class="modal-overlay" @click="closeModal">
     <div class="modal" @click.stop>
       <div class="modal__header">
-        <h2 class="modal__title">Добавить проект</h2>
+        <h2 class="modal__title">Додати проєкт</h2>
         <button class="modal__close" @click="closeModal">&times;</button>
       </div>
       
       <form class="modal__form">
         <div class="form-group">
-          <label for="project-name" class="form-label">Название проекта</label>
+          <label for="project-name" class="form-label">Назва проєкту</label>
           <input
             id="project-name"
             v-model="formData.name"
             type="text"
             class="form-input"
             :class="{ 'form-input--error': errors.name }"
-            placeholder="Введите название проекта"
+            placeholder="Введіть назву проєкту"
           />
           <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
         </div>
         
         <div class="form-group">
-          <label for="project-description" class="form-label">Описание проекта</label>
+          <label for="project-description" class="form-label">Опис проєкту</label>
           <textarea
             id="project-description"
             v-model="formData.description"
             class="form-textarea"
-            placeholder="Введите описание проекта"
+            placeholder="Введіть опис проєкту"
             rows="4"
           />
         </div>
         
         <div class="modal__actions">
           <button type="button" class="btn btn--secondary" @click="closeModal">
-            Отмена
+            Скасувати
           </button>
           <button 
             type="button" 
@@ -41,8 +41,8 @@
             @click="saveProject"
             :disabled="isSubmitting"
           >
-            <span v-if="isSubmitting">Сохранение...</span>
-            <span v-else>Сохранить</span>
+            <span v-if="isSubmitting">Збереження...</span>
+            <span v-else>Зберегти</span>
           </button>
         </div>
       </form>
@@ -79,7 +79,7 @@ const validateForm = (): boolean => {
   errors.name = ''
   
   if (!formData.name.trim()) {
-    errors.name = 'Название проекта обязательно для заполнения'
+    errors.name = 'Назва проєкту обов\'язкова для заповнення'
     return false
   }
   

@@ -4,7 +4,7 @@
       <button @click="goBack" class="back-button">← Назад</button>
       <div class="header-content">
         <h1>{{ project?.name }}</h1>
-        <button @click="confirmDeleteProject" class="delete-button">🗑️ Удалить проект</button>
+        <button @click="confirmDeleteProject" class="delete-button">🗑️ Видалити проєкт</button>
       </div>
     </div>
     
@@ -15,26 +15,26 @@
             @click="setMode('table')" 
             :class="['mode-btn', { active: viewMode === 'table' }]"
           >
-            Table
+            Таблиця
           </button>
           <button 
             @click="setMode('kanban')" 
             :class="['mode-btn', { active: viewMode === 'kanban' }]"
           >
-            Kanban
+            Канбан
           </button>
         </div>
-        <button @click="openCreateModal" class="add-task-btn">+ Добавить задачу</button>
+        <button @click="openCreateModal" class="add-task-btn">+ Додати задачу</button>
       </div>
       
       <div class="filters-section">
         <div class="filter-group">
-          <label for="assignee-filter">Исполнитель:</label>
+          <label for="assignee-filter">Виконавець:</label>
           <input 
             id="assignee-filter"
             v-model="assigneeFilter" 
             type="text" 
-            placeholder="Фильтр по исполнителю"
+            placeholder="Фільтр за виконавцем"
             class="filter-input"
           />
         </div>
@@ -45,9 +45,9 @@
             v-model="statusFilter" 
             class="filter-select"
           >
-            <option value="">Все статусы</option>
-            <option value="todo">К выполнению</option>
-            <option value="in-progress">В работе</option>
+            <option value="">Всі статуси</option>
+            <option value="todo">До виконання</option>
+            <option value="in-progress">В роботі</option>
             <option value="done">Завершено</option>
           </select>
         </div>
@@ -56,17 +56,17 @@
           @click="clearFilters" 
           class="clear-filters-btn"
         >
-          Очистить фильтры
+          Очистити фільтри
         </button>
       </div>
       
       <div class="tasks-container">
         <div v-if="viewMode === 'table'" class="table-view">
           <div v-if="isLoading" class="loading-state">
-            <p>Loading...</p>
+            <p>Завантаження...</p>
           </div>
           <div v-else-if="projectTasks.length === 0" class="empty-state">
-            <p>Нет задач</p>
+            <p>Немає задач</p>
           </div>
           <table v-else class="tasks-table">
             <thead>
@@ -76,7 +76,7 @@
                   class="sortable-header"
                   :style="{ width: columnWidths.title + 'px' }"
                 >
-                  Название
+                  Назва
                   <span class="sort-indicator" v-if="sort.column === 'title'">
                     {{ sort.direction === 'asc' ? '↑' : '↓' }}
                   </span>
@@ -87,7 +87,7 @@
                   class="sortable-header"
                   :style="{ width: columnWidths.assignee + 'px' }"
                 >
-                  Исполнитель
+                  Виконавець
                   <span class="sort-indicator" v-if="sort.column === 'assignee'">
                     {{ sort.direction === 'asc' ? '↑' : '↓' }}
                   </span>
@@ -109,7 +109,7 @@
                   class="sortable-header"
                   :style="{ width: columnWidths.dueDate + 'px' }"
                 >
-                  Термин выполнения
+                  Термін виконання
                   <span class="sort-indicator" v-if="sort.column === 'dueDate'">
                     {{ sort.direction === 'asc' ? '↑' : '↓' }}
                   </span>
@@ -118,7 +118,7 @@
               </tr>
               <tr v-if="sort.column === 'order'" class="manual-sort-indicator">
                 <td :colspan="4" class="manual-sort-notice">
-                  🔀 Ручная сортировка (перетащите задачи для изменения порядка)
+                  🔀 Ручне сортування (перетягніть задачі для зміни порядку)
                 </td>
               </tr>
             </thead>
@@ -132,7 +132,7 @@
               drag-class="dragging-row"
               @end="handleTableReorder"
             >
-              <template #item="{ element: task, index }">
+              <template #item="{ element: task }">
                 <tr :key="task.id" class="draggable-row">
                   <td :style="{ width: columnWidths.title + 'px' }" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
                   <td :style="{ width: columnWidths.assignee + 'px' }">{{ task.assignee || '-' }}</td>
@@ -151,7 +151,7 @@
         <div v-else-if="viewMode === 'kanban'" class="kanban-view">
           <div class="kanban-columns">
             <KanbanColumn
-              title="К выполнению"
+              title="До виконання"
               :tasks="todoTasks"
               status="todo"
               :on-task-move="handleTaskMove"
@@ -159,7 +159,7 @@
               :on-edit-task="openEditModal"
             />
             <KanbanColumn
-              title="В работе"
+              title="В роботі"
               :tasks="inProgressTasks"
               status="in-progress"
               :on-task-move="handleTaskMove"
@@ -180,9 +180,9 @@
     </div>
     
     <div v-else class="not-found">
-      <h2>Проект не найден</h2>
-      <p>Проект, который вы ищете, не существует.</p>
-      <button @click="goBack" class="back-button">Вернуться к проектам</button>
+      <h2>Проєкт не знайдено</h2>
+      <p>Проєкт, який ви шукаєте, не існує.</p>
+      <button @click="goBack" class="back-button">Повернутися до проєктів</button>
     </div>
     
     <TaskModal
@@ -195,12 +195,12 @@
     
     <div v-if="showDeleteConfirm" class="modal-overlay">
       <div class="confirm-modal">
-        <h3>Удалить проект?</h3>
-        <p>Вы уверены, что хотите удалить проект "{{ project?.name }}"?</p>
-        <p class="warning">⚠️ Все задачи в этом проекте также будут удалены!</p>
+        <h3>Видалити проєкт?</h3>
+        <p>Ви впевнені, що хочете видалити проєкт "{{ project?.name }}"?</p>
+        <p class="warning">⚠️ Всі задачі в цьому проєкті також будуть видалені!</p>
         <div class="modal-actions">
-          <button @click="cancelDeleteProject" class="cancel-btn">Отмена</button>
-          <button @click="deleteProject" class="confirm-delete-btn">Удалить</button>
+          <button @click="cancelDeleteProject" class="cancel-btn">Скасувати</button>
+          <button @click="deleteProject" class="confirm-delete-btn">Видалити</button>
         </div>
       </div>
     </div>
@@ -417,8 +417,8 @@ watch(() => route.params.id, async (newId, oldId) => {
 
 const getStatusText = (status: string) => {
   switch (status) {
-    case 'todo': return 'К выполнению'
-    case 'in-progress': return 'В работе'
+    case 'todo': return 'До виконання'
+    case 'in-progress': return 'В роботі'
     case 'done': return 'Завершено'
     default: return status
   }

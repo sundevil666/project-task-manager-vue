@@ -1,22 +1,22 @@
 <template>
   <div class="task-status-chart">
-    <h3 class="chart-title">Распределение задач по статусам</h3>
+    <h3 class="chart-title">Розподіл задач за статусами</h3>
     <div class="chart-wrapper">
       <Doughnut v-if="chartData.labels.length > 0" :data="chartData" :options="chartOptions" />
-      <div v-else class="no-data">Нет данных</div>
+      <div v-else class="no-data">Немає даних</div>
     </div>
     <div class="chart-legend">
       <div class="legend-item">
         <span class="legend-color" style="background-color: #f59e0b;"></span>
-        <span class="legend-label">To Do: {{ statusCounts.todo }}</span>
+        <span class="legend-label">До виконання: {{ statusCounts.todo }}</span>
       </div>
       <div class="legend-item">
         <span class="legend-color" style="background-color: #3b82f6;"></span>
-        <span class="legend-label">In Progress: {{ statusCounts['in-progress'] }}</span>
+        <span class="legend-label">В роботі: {{ statusCounts['in-progress'] }}</span>
       </div>
       <div class="legend-item">
         <span class="legend-color" style="background-color: #10b981;"></span>
-        <span class="legend-label">Done: {{ statusCounts.done }}</span>
+        <span class="legend-label">Завершено: {{ statusCounts.done }}</span>
       </div>
     </div>
   </div>
@@ -51,7 +51,7 @@ const statusCounts = computed(() => {
 })
 
 const chartData = computed(() => ({
-  labels: ['To Do', 'In Progress', 'Done'],
+  labels: ['До виконання', 'В роботі', 'Завершено'],
   datasets: [
     {
       data: [statusCounts.value.todo, statusCounts.value['in-progress'], statusCounts.value.done],

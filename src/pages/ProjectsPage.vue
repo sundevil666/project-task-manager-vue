@@ -1,23 +1,23 @@
 <template>
   <div class="projects-page">
     <div class="projects-header">
-      <h1>Projects</h1>
-      <button class="btn btn--primary" @click="openModal">Добавить проект</button>
+      <h1>Проєкти</h1>
+      <button class="btn btn--primary" @click="openModal">Додати проєкт</button>
     </div>
 
     <div class="dashboard">
       <TaskStatusChart class="chart-section" />
       <div class="projects-table-container">
         <div v-if="isLoading" class="loading-state">
-          Loading...
+          Завантаження...
         </div>
         <table v-else class="projects-table">
           <thead>
             <tr>
-              <th>ID проекта</th>
-              <th>Название проекта</th>
-              <th>Количество задач</th>
-              <th>Действия</th>
+              <th>ID проєкту</th>
+              <th>Назва проєкту</th>
+              <th>Кількість задач</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody>
