@@ -132,24 +132,30 @@
         
         <div v-else-if="viewMode === 'kanban'" class="kanban-view">
           <div class="kanban-columns">
-            <div class="kanban-column">
-              <h3>To Do</h3>
-              <div class="column-placeholder">
-                <p>Задачи для выполнения</p>
-              </div>
-            </div>
-            <div class="kanban-column">
-              <h3>In Progress</h3>
-              <div class="column-placeholder">
-                <p>Задачи в работе</p>
-              </div>
-            </div>
-            <div class="kanban-column">
-              <h3>Done</h3>
-              <div class="column-placeholder">
-                <p>Завершенные задачи</p>
-              </div>
-            </div>
+            <KanbanColumn
+              title="К выполнению"
+              :tasks="todoTasks"
+              status="todo"
+              :on-task-move="handleTaskMove"
+              :on-task-reorder="handleTaskReorder"
+              :on-edit-task="openEditModal"
+            />
+            <KanbanColumn
+              title="В работе"
+              :tasks="inProgressTasks"
+              status="in-progress"
+              :on-task-move="handleTaskMove"
+              :on-task-reorder="handleTaskReorder"
+              :on-edit-task="openEditModal"
+            />
+            <KanbanColumn
+              title="Завершено"
+              :tasks="doneTasks"
+              status="done"
+              :on-task-move="handleTaskMove"
+              :on-task-reorder="handleTaskReorder"
+              :on-edit-task="openEditModal"
+            />
           </div>
         </div>
       </div>
@@ -178,6 +184,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { mockProjects } from '../mocks/projects'
 import { useTaskStore } from '../store/tasks'
 import TaskModal from '../components/TaskModal.vue'
+import KanbanColumn from '../components/KanbanColumn.vue'
 import type { IProject } from '../types'
 import type { Task } from '../store/tasks'
 
@@ -227,6 +234,17 @@ const projectId = computed(() => Number(route.params.id))
 const projectTasks = computed(() => taskStore.getTasksByProjectId(projectId.value))
 const isLoading = computed(() => taskStore.loading)
 const sort = computed(() => taskStore.sort)
+
+// Kanban tasks grouped by status
+const todoTasks = computed(() => 
+  projectTasks.value.filter(task => task.status === 'todo').sort((a, b) => a.order - b.order)
+)
+const inProgressTasks = computed(() => 
+  projectTasks.value.filter(task => task.status === 'in-progress').sort((a, b) => a.order - b.order)
+)
+const doneTasks = computed(() => 
+  projectTasks.value.filter(task => task.status === 'done').sort((a, b) => a.order - b.order)
+)
 
 // Filter reactive refs
 const assigneeFilter = ref('')
@@ -324,6 +342,110 @@ const openEditModal = (task: Task) => {
 const closeModal = () => {
   isModalOpen.value = false
   selectedTask.value = undefined
+}
+
+// Kanban drag & drop handlers
+const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number) => {
+  try {
+    await taskStore.updateTask(taskId, { status: newStatus })
+    
+    const allTasks = taskStore.getTasksByProjectId(projectId.value)
+    const todoTasks = allTasks.filter(t => t.status === 'todo')
+    const inProgressTasks = allTasks.filter(t => t.status === 'in-progress')
+    const doneTasks = allTasks.filter(t => t.status === 'done')
+    
+    const reorderedTasks: Task[] = []
+    
+    const insertTaskAtPosition = (tasks: Task[], insertOrder: number) => {
+      const movedTask = tasks.find(t => t.id === taskId)
+      if (!movedTask) {
+        return tasks
+      }
+      
+      const newTasks = tasks.filter(t => t.id !== taskId)
+      newTasks.splice(insertOrder, 0, movedTask)
+      
+      return newTasks
+    }
+    
+    let newTodoTasks = [...todoTasks]
+    let newInProgressTasks = [...inProgressTasks]
+    let newDoneTasks = [...doneTasks]
+    
+    switch (newStatus) {
+      case 'todo':
+        newTodoTasks = insertTaskAtPosition(todoTasks, newOrder)
+        break
+      case 'in-progress':
+        newInProgressTasks = insertTaskAtPosition(inProgressTasks, newOrder)
+        break
+      case 'done':
+        newDoneTasks = insertTaskAtPosition(doneTasks, newOrder)
+        break
+    }
+    
+    newTodoTasks.forEach((task, index) => {
+      reorderedTasks.push({ ...task, order: index })
+    })
+    
+    newInProgressTasks.forEach((task, index) => {
+      reorderedTasks.push({ ...task, order: index })
+    })
+    
+    newDoneTasks.forEach((task, index) => {
+      reorderedTasks.push({ ...task, order: index })
+    })
+    
+    await taskStore.reorderTasks(reorderedTasks)
+  } catch (error) {
+    console.error('Failed to move task:', error)
+  }
+}
+
+const handleTaskReorder = async (taskId: number, newOrder: number) => {
+  try {
+    const allTasks = taskStore.getTasksByProjectId(projectId.value)
+    const todoTasks = allTasks.filter(t => t.status === 'todo')
+    const inProgressTasks = allTasks.filter(t => t.status === 'in-progress')
+    const doneTasks = allTasks.filter(t => t.status === 'done')
+    
+    const reorderedTasks: Task[] = []
+    
+    const reorderColumnTasks = (tasks: Task[]) => {
+      const movedTask = tasks.find(t => t.id === taskId)
+      if (!movedTask) {
+        return tasks
+      }
+      
+      const newTasks = [...tasks]
+      const currentIndex = newTasks.findIndex(t => t.id === taskId)
+      
+      newTasks.splice(currentIndex, 1)
+      newTasks.splice(newOrder, 0, movedTask)
+      
+      return newTasks
+    }
+    
+    const newTodoTasks = reorderColumnTasks(todoTasks)
+    const newInProgressTasks = reorderColumnTasks(inProgressTasks)
+    const newDoneTasks = reorderColumnTasks(doneTasks)
+    
+    newTodoTasks.forEach((task, index) => {
+      reorderedTasks.push({ ...task, order: index })
+    })
+    
+    newInProgressTasks.forEach((task, index) => {
+      reorderedTasks.push({ ...task, order: index })
+    })
+    
+    newDoneTasks.forEach((task, index) => {
+      reorderedTasks.push({ ...task, order: index })
+    })
+    
+    await taskStore.reorderTasks(reorderedTasks)
+  } catch (error) {
+    console.error('Failed to reorder task:', error)
+  }
 }
 </script>
 
@@ -617,33 +739,6 @@ const closeModal = () => {
     
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
-    }
-  }
-  
-  .kanban-column {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    border: 2px solid #e0e0e0;
-    
-    h3 {
-      margin: 0 0 1rem 0;
-      color: #2c3e50;
-      font-size: 1.1rem;
-      text-align: center;
-    }
-    
-    .column-placeholder {
-      min-height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      
-      p {
-        color: #999;
-        font-style: italic;
-        text-align: center;
-      }
     }
   }
 }

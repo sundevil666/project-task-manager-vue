@@ -255,21 +255,21 @@ export const useTaskStore = defineStore('tasks', () => {
   const reorderTasks = async (reorderedTasks: Task[]) => {
     loading.value = true
     try {
-      // Update local state immediately for responsive UI
-      reorderedTasks.forEach((task, index) => {
+      reorderedTasks.forEach((task) => {
         const existingTask = tasks.value.find(t => t.id === task.id)
         if (existingTask) {
-          existingTask.order = index
+          existingTask.order = task.order
           existingTask.status = task.status
         }
       })
 
-      // Sort tasks by order to maintain consistency
-      tasks.value.sort((a, b) => a.order - b.order)
-
-      // Note: In a real implementation, you would make API calls here
-      // to persist the new order and status changes
-      // For now, we'll just update the local state
+      tasks.value.sort((a, b) => {
+        if (a.status !== b.status) {
+          const statusOrder = { 'todo': 0, 'in-progress': 1, 'done': 2 }
+          return statusOrder[a.status] - statusOrder[b.status]
+        }
+        return a.order - b.order
+      })
       
       return true
     } catch (error) {
