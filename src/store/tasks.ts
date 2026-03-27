@@ -231,6 +231,7 @@ export const useTaskStore = defineStore('tasks', () => {
       saveToStorage()
     } catch (error) {
       console.log(error)
+      throw error
     } finally {
       loading.value = false
     }
@@ -266,8 +267,9 @@ export const useTaskStore = defineStore('tasks', () => {
       saveToStorage()
       toast.success('Задача успешно добавлена')
       return newTask
-    } catch {
+    } catch (error) {
       toast.error('Ошибка при добавлении задачи')
+      throw error
     } finally {
       loading.value = false
     }
@@ -297,8 +299,9 @@ export const useTaskStore = defineStore('tasks', () => {
         return tasks.value[index]
       }
       return null
-    } catch {
+    } catch (error) {
       toast.error('Ошибка при обновлении задачи')
+      throw error
     } finally {
       loading.value = false
     }
@@ -315,8 +318,9 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       toast.success('Задача удалена')
       return true
-    } catch {
+    } catch (error) {
       toast.error('Ошибка при удалении задачи')
+      throw error
     } finally {
       loading.value = false
     }
