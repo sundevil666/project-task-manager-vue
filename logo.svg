@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="40" height="40" fill="#4F46E5" rx="8"/>
+  <path d="M10 12h20v2H10v-2zm0 4h20v2H10v-2zm0 4h12v2H10v-2z" fill="white"/>
+  <circle cx="28" cy="24" r="2" fill="#10B981"/>
+  <text x="48" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#1F2937">TaskFlow</text>
+</svg>
