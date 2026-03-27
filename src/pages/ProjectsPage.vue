@@ -73,7 +73,7 @@ const closeModal = () => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .loading-state {
   padding: 2rem;
   text-align: center;
