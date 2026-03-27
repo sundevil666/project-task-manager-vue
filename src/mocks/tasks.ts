@@ -1,4 +1,4 @@
-export interface Task {
+export interface ITask {
   id: number
   projectId: number
   title: string
@@ -10,7 +10,7 @@ export interface Task {
   createdDate: string
 }
 
-export const mockTasks: Task[] = [
+export const mockTasks: ITask[] = [
   {
     id: 1,
     projectId: 1,

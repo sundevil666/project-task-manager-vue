@@ -1,16 +1,16 @@
-import { Task } from './tasks'
+import { ITask } from './tasks'
 
-export interface Project {
+export interface IProject {
   id: number
   name: string
   description: string
   status: 'Planning' | 'In Progress' | 'Completed' | 'On Hold'
   createdDate: string
   taskCount: number
-  tasks?: Task[]
+  tasks?: ITask[]
 }
 
-export const mockProjects: Project[] = [
+export const mockProjects: IProject[] = [
   {
     id: 1,
     name: 'Website Redesign',
