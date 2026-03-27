@@ -13,21 +13,24 @@ export const localStorageHelper = {
   set<T>(key: string, value: T): void {
     try {
       localStorage.setItem(key, JSON.stringify(value))
-    } catch {
+    } catch (error) {
+      console.log(error)
     }
   },
 
   remove(key: string): void {
     try {
       localStorage.removeItem(key)
-    } catch {
+    } catch (error) {
+      console.log(error)
     }
   },
 
   clear(): void {
     try {
       localStorage.clear()
-    } catch {
+    } catch (error) {
+      console.log(error)
     }
   }
 }

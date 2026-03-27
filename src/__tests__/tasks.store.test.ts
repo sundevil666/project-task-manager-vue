@@ -137,7 +137,7 @@ describe('useTaskStore', () => {
       const result = await store.addTask(taskData)
 
       expect(store.tasks).toContainEqual(expect.objectContaining({ title: 'Task 1' }))
-      expect(result.title).toBe('Task 1')
+      expect(result!.title).toBe('Task 1')
       
       const stored = JSON.parse(localStorage.getItem('tasks') || '[]')
       expect(stored).toHaveLength(1)
@@ -178,7 +178,7 @@ describe('useTaskStore', () => {
 
       const result = await store.addTask(taskData)
 
-      expect(result.order).toBe(1)
+      expect(result!.order).toBe(1)
     })
 
     it('should throw error when API fails', async () => {

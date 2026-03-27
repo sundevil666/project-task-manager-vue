@@ -111,7 +111,8 @@ const saveProject = async () => {
     })
     
     closeModal()
-  } catch {
+  } catch (error) {
+    console.log(error)
   } finally {
     isSubmitting.value = false
   }

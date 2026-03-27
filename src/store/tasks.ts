@@ -229,7 +229,8 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       
       saveToStorage()
-    } catch {
+    } catch (error) {
+      console.log(error)
     } finally {
       loading.value = false
     }
@@ -329,7 +330,8 @@ export const useTaskStore = defineStore('tasks', () => {
       for (const task of tasksToDelete) {
         try {
           await api.deleteTask(task.id)
-        } catch {
+        } catch (error) {
+          console.log(error)
         }
       }
       
@@ -360,7 +362,8 @@ export const useTaskStore = defineStore('tasks', () => {
       
       saveToStorage()
       return true
-    } catch {
+    } catch (error) {
+      console.log(error)
     } finally {
       loading.value = false
     }
@@ -402,7 +405,8 @@ export const useTaskStore = defineStore('tasks', () => {
         }
       }
       localStorageHelper.set(LS_KEYS.TABLE_SETTINGS, settings)
-    } catch {
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -414,7 +418,8 @@ export const useTaskStore = defineStore('tasks', () => {
         filters.value = settings.filters
         return settings.columnWidths
       }
-    } catch {
+    } catch (error) {
+      console.log(error)
     }
     return null
   }

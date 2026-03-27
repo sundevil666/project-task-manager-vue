@@ -53,7 +53,8 @@ const deleteProject = async () => {
     await projectsStore.deleteProject(props.project.id)
     
     showConfirm.value = false
-  } catch {
+  } catch (error) {
+    console.log(error)
   }
 }
 </script>

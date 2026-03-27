@@ -458,7 +458,8 @@ const deleteProject = async () => {
     await projectsStore.deleteProject(project.value.id)
     
     router.push('/')
-  } catch {
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -502,7 +503,8 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     })
     
     await taskStore.reorderTasks(reorderedTasks)
-  } catch {
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -550,7 +552,8 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     })
     
     await taskStore.reorderTasks(reorderedTasks)
-  } catch {
+  } catch (error) {
+    console.log(error)
   }
 }
 </script>

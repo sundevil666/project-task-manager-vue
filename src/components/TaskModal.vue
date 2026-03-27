@@ -215,7 +215,8 @@ const handleSubmit = async () => {
     }
 
     closeModal()
-  } catch {
+  } catch (error) {
+    console.log(error)
   } finally {
     isLoading.value = false
   }
