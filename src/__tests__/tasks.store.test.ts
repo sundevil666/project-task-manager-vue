@@ -51,7 +51,8 @@ describe('useTaskStore', () => {
 
   beforeEach(() => {
     localStorage.clear()
-    localStorage.setItem('has_seeded_data', 'true') // Skip seeding
+    localStorage.setItem('has_seeded_projects', 'true') // Skip seeding
+    localStorage.setItem('has_seeded_tasks', 'true')
     setActivePinia(createPinia())
     store = useTaskStore()
     vi.clearAllMocks()
