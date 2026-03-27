@@ -26,10 +26,36 @@
       
       <div class="tasks-container">
         <div v-if="viewMode === 'table'" class="table-view">
-          <div class="table-placeholder">
-            <h3>Таблица задач</h3>
-            <p>Здесь будет отображаться таблица с задачами</p>
+          <div v-if="isLoading" class="loading-state">
+            <p>Loading...</p>
           </div>
+          <div v-else-if="projectTasks.length === 0" class="empty-state">
+            <p>Нет задач</p>
+          </div>
+          <table v-else class="tasks-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Исполнитель</th>
+                <th>Статус</th>
+                <th>Термин выполнения</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="task in projectTasks" :key="task.id">
+                <td>{{ task.id }}</td>
+                <td>{{ task.title }}</td>
+                <td>{{ task.assignee || '-' }}</td>
+                <td>
+                  <span :class="['status-badge', `status-${task.status}`]">
+                    {{ getStatusText(task.status) }}
+                  </span>
+                </td>
+                <td>{{ task.dueDate || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         
         <div v-else-if="viewMode === 'kanban'" class="kanban-view">
@@ -66,13 +92,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { mockProjects } from '../mocks/projects'
+import { useTaskStore } from '../store/tasks'
 import type { IProject } from '../types'
 
 const router = useRouter()
 const route = useRoute()
+const taskStore = useTaskStore()
 
 const viewMode = ref<'table' | 'kanban'>('table')
 
@@ -93,8 +121,27 @@ const project = computed((): IProject | null => {
   return null
 })
 
+const projectId = computed(() => Number(route.params.id))
+const projectTasks = computed(() => taskStore.getTasksByProjectId(projectId.value))
+const isLoading = computed(() => taskStore.loading)
+
 const goBack = () => {
   router.push('/')
+}
+
+onMounted(async () => {
+  if (projectId.value) {
+    await taskStore.fetchTasks(projectId.value)
+  }
+})
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'todo': return 'К выполнению'
+    case 'in-progress': return 'В работе'
+    case 'done': return 'Завершено'
+    default: return status
+  }
 }
 </script>
 
@@ -208,19 +255,71 @@ const goBack = () => {
 }
 
 .table-view {
-  .table-placeholder {
+  .loading-state,
+  .empty-state {
     text-align: center;
     padding: 3rem;
     color: #666;
     
-    h3 {
-      margin: 0 0 1rem 0;
-      color: #2c3e50;
-    }
-    
     p {
       margin: 0;
       font-style: italic;
+    }
+  }
+  
+  .tasks-table {
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    thead {
+      background: #f8f9fa;
+      
+      th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 2px solid #e0e0e0;
+      }
+    }
+    
+    tbody {
+      tr {
+        &:hover {
+          background: #f8f9fa;
+        }
+        
+        td {
+          padding: 1rem;
+          border-bottom: 1px solid #e0e0e0;
+          color: #2c3e50;
+        }
+      }
+    }
+    
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      
+      &.status-todo {
+        background: #fff3cd;
+        color: #856404;
+      }
+      
+      &.status-in-progress {
+        background: #cce5ff;
+        color: #004085;
+      }
+      
+      &.status-done {
+        background: #d4edda;
+        color: #155724;
+      }
     }
   }
 }
