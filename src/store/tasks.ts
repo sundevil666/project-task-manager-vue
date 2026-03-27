@@ -15,6 +15,12 @@ export interface TaskFilters {
   assignee?: string
 }
 
+// Sort types
+export interface TaskSort {
+  column: 'status' | 'dueDate' | 'title' | 'assignee'
+  direction: 'asc' | 'desc'
+}
+
 // Kanban column type
 export interface KanbanColumn {
   status: Task['status']
@@ -26,6 +32,7 @@ export const useTaskStore = defineStore('tasks', () => {
   const tasks = ref<Task[]>([])
   const loading = ref(false)
   const filters = ref<TaskFilters>({})
+  const sort = ref<TaskSort>({ column: 'status', direction: 'asc' })
 
   // Getters
   const getTasksByProjectId = computed(() => {
@@ -51,6 +58,59 @@ export const useTaskStore = defineStore('tasks', () => {
 
     // Sort by order
     return filtered.sort((a, b) => a.order - b.order)
+  })
+
+  const getFilteredAndSortedTasks = computed(() => {
+    return (projectId: number) => {
+      let filtered = tasks.value.filter(task => task.projectId === projectId)
+
+      // Apply status filter
+      if (filters.value.status) {
+        filtered = filtered.filter(task => task.status === filters.value.status)
+      }
+
+      // Apply assignee filter
+      if (filters.value.assignee) {
+        filtered = filtered.filter(task => 
+          task.assignee?.toLowerCase().includes(filters.value.assignee!.toLowerCase())
+        )
+      }
+
+      // Apply sorting
+      filtered.sort((a, b) => {
+        const { column, direction } = sort.value
+        
+        let aValue: any
+        let bValue: any
+
+        switch (column) {
+          case 'status':
+            aValue = a.status
+            bValue = b.status
+            break
+          case 'dueDate':
+            aValue = a.dueDate ? new Date(a.dueDate).getTime() : 0
+            bValue = b.dueDate ? new Date(b.dueDate).getTime() : 0
+            break
+          case 'title':
+            aValue = a.title.toLowerCase()
+            bValue = b.title.toLowerCase()
+            break
+          case 'assignee':
+            aValue = a.assignee?.toLowerCase() || ''
+            bValue = b.assignee?.toLowerCase() || ''
+            break
+          default:
+            return a.order - b.order
+        }
+
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1
+        return 0
+      })
+
+      return filtered
+    }
   })
 
   const getTasksByStatus = computed(() => {
@@ -228,6 +288,19 @@ export const useTaskStore = defineStore('tasks', () => {
     filters.value = {}
   }
 
+  const setSort = (newSort: TaskSort) => {
+    sort.value = { ...newSort }
+  }
+
+  const toggleSort = (column: TaskSort['column']) => {
+    if (sort.value.column === column) {
+      sort.value.direction = sort.value.direction === 'asc' ? 'desc' : 'asc'
+    } else {
+      sort.value.column = column
+      sort.value.direction = 'asc'
+    }
+  }
+
   // Helper functions to map between API status and task status
   const mapApiStatusToTaskStatus = (apiStatus: string): Task['status'] => {
     switch (apiStatus) {
@@ -253,10 +326,12 @@ export const useTaskStore = defineStore('tasks', () => {
     tasks,
     loading,
     filters,
+    sort,
     
     // Getters
     getTasksByProjectId,
     filteredTasks,
+    getFilteredAndSortedTasks,
     getTasksByStatus,
     kanbanColumns,
     
@@ -267,6 +342,8 @@ export const useTaskStore = defineStore('tasks', () => {
     deleteTask,
     reorderTasks,
     setFilters,
-    clearFilters
+    clearFilters,
+    setSort,
+    toggleSort
   }
 })

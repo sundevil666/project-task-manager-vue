@@ -24,6 +24,40 @@
         <button class="add-task-btn">+ Добавить задачу</button>
       </div>
       
+      <!-- Filters Section -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label for="assignee-filter">Исполнитель:</label>
+          <input 
+            id="assignee-filter"
+            v-model="assigneeFilter" 
+            type="text" 
+            placeholder="Фильтр по исполнителю"
+            class="filter-input"
+          />
+        </div>
+        <div class="filter-group">
+          <label for="status-filter">Статус:</label>
+          <select 
+            id="status-filter"
+            v-model="statusFilter" 
+            class="filter-select"
+          >
+            <option value="">Все статусы</option>
+            <option value="todo">К выполнению</option>
+            <option value="in-progress">В работе</option>
+            <option value="done">Завершено</option>
+          </select>
+        </div>
+        <button 
+          v-if="hasActiveFilters" 
+          @click="clearFilters" 
+          class="clear-filters-btn"
+        >
+          Очистить фильтры
+        </button>
+      </div>
+      
       <div class="tasks-container">
         <div v-if="viewMode === 'table'" class="table-view">
           <div v-if="isLoading" class="loading-state">
@@ -35,24 +69,62 @@
           <table v-else class="tasks-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Название</th>
-                <th>Исполнитель</th>
-                <th>Статус</th>
-                <th>Термин выполнения</th>
+                <th 
+                  @click="handleSort('title')" 
+                  class="sortable-header"
+                  :style="{ width: columnWidths.title + 'px' }"
+                >
+                  Название
+                  <span class="sort-indicator" v-if="sort.column === 'title'">
+                    {{ sort.direction === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 'title')"></div>
+                </th>
+                <th 
+                  @click="handleSort('assignee')" 
+                  class="sortable-header"
+                  :style="{ width: columnWidths.assignee + 'px' }"
+                >
+                  Исполнитель
+                  <span class="sort-indicator" v-if="sort.column === 'assignee'">
+                    {{ sort.direction === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 'assignee')"></div>
+                </th>
+                <th 
+                  @click="handleSort('status')" 
+                  class="sortable-header"
+                  :style="{ width: columnWidths.status + 'px' }"
+                >
+                  Статус
+                  <span class="sort-indicator" v-if="sort.column === 'status'">
+                    {{ sort.direction === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 'status')"></div>
+                </th>
+                <th 
+                  @click="handleSort('dueDate')" 
+                  class="sortable-header"
+                  :style="{ width: columnWidths.dueDate + 'px' }"
+                >
+                  Термин выполнения
+                  <span class="sort-indicator" v-if="sort.column === 'dueDate'">
+                    {{ sort.direction === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 'dueDate')"></div>
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="task in projectTasks" :key="task.id">
-                <td>{{ task.id }}</td>
-                <td>{{ task.title }}</td>
-                <td>{{ task.assignee || '-' }}</td>
-                <td>
+              <tr v-for="task in displayTasks" :key="task.id">
+                <td :style="{ width: columnWidths.title + 'px' }">{{ task.title }}</td>
+                <td :style="{ width: columnWidths.assignee + 'px' }">{{ task.assignee || '-' }}</td>
+                <td :style="{ width: columnWidths.status + 'px' }">
                   <span :class="['status-badge', `status-${task.status}`]">
                     {{ getStatusText(task.status) }}
                   </span>
                 </td>
-                <td>{{ task.dueDate || '-' }}</td>
+                <td :style="{ width: columnWidths.dueDate + 'px' }">{{ task.dueDate || '-' }}</td>
               </tr>
             </tbody>
           </table>
@@ -92,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { mockProjects } from '../mocks/projects'
 import { useTaskStore } from '../store/tasks'
@@ -103,6 +175,20 @@ const route = useRoute()
 const taskStore = useTaskStore()
 
 const viewMode = ref<'table' | 'kanban'>('table')
+
+// Column widths for resizing
+const columnWidths = ref({
+  title: 300,
+  assignee: 150,
+  status: 120,
+  dueDate: 150
+})
+
+// Resize state
+const resizing = ref(false)
+const resizingColumn = ref<keyof typeof columnWidths.value | null>(null)
+const startX = ref(0)
+const startWidth = ref(0)
 
 const setMode = (mode: 'table' | 'kanban') => {
   viewMode.value = mode
@@ -124,6 +210,68 @@ const project = computed((): IProject | null => {
 const projectId = computed(() => Number(route.params.id))
 const projectTasks = computed(() => taskStore.getTasksByProjectId(projectId.value))
 const isLoading = computed(() => taskStore.loading)
+const sort = computed(() => taskStore.sort)
+
+// Filter reactive refs
+const assigneeFilter = ref('')
+const statusFilter = ref('')
+
+// Computed property for filtered and sorted tasks
+const displayTasks = computed(() => {
+  return taskStore.getFilteredAndSortedTasks(projectId.value)
+})
+
+// Check if filters are active
+const hasActiveFilters = computed(() => {
+  return assigneeFilter.value.trim() !== '' || statusFilter.value !== ''
+})
+
+// Watch for filter changes and update store
+watch([assigneeFilter, statusFilter], ([newAssignee, newStatus]) => {
+  taskStore.setFilters({
+    assignee: newAssignee.trim() || undefined,
+    status: newStatus as any || undefined
+  })
+})
+
+// Sort handler
+const handleSort = (column: 'status' | 'dueDate' | 'title' | 'assignee') => {
+  taskStore.toggleSort(column)
+}
+
+// Clear filters
+const clearFilters = () => {
+  assigneeFilter.value = ''
+  statusFilter.value = ''
+  taskStore.clearFilters()
+}
+
+// Column resizing handlers
+const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value) => {
+  event.preventDefault()
+  resizing.value = true
+  resizingColumn.value = column
+  startX.value = event.clientX
+  startWidth.value = columnWidths.value[column]
+  
+  document.addEventListener('mousemove', handleResize)
+  document.addEventListener('mouseup', stopResize)
+}
+
+const handleResize = (event: MouseEvent) => {
+  if (!resizing.value || !resizingColumn.value) return
+  
+  const diff = event.clientX - startX.value
+  const newWidth = Math.max(80, startWidth.value + diff) // Minimum width of 80px
+  columnWidths.value[resizingColumn.value] = newWidth
+}
+
+const stopResize = () => {
+  resizing.value = false
+  resizingColumn.value = null
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
+}
 
 const goBack = () => {
   router.push('/')
@@ -247,6 +395,62 @@ const getStatusText = (status: string) => {
   }
 }
 
+.filters-section {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  
+  label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2c3e50;
+  }
+}
+
+.filter-input,
+.filter-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  min-width: 150px;
+  
+  &:focus {
+    outline: none;
+    border-color: #42b883;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.2);
+  }
+}
+
+.clear-filters-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+  height: fit-content;
+  
+  &:hover {
+    background: #c0392b;
+  }
+}
+
 .tasks-container {
   background: #f8f9fa;
   border-radius: 12px;
@@ -283,6 +487,43 @@ const getStatusText = (status: string) => {
         font-weight: 600;
         color: #2c3e50;
         border-bottom: 2px solid #e0e0e0;
+        position: relative;
+        user-select: none;
+        
+        &.sortable-header {
+          cursor: pointer;
+          transition: background-color 0.2s;
+          
+          &:hover {
+            background-color: #e8f4f8;
+          }
+        }
+      }
+    }
+    
+    .sort-indicator {
+      margin-left: 0.5rem;
+      font-size: 0.8rem;
+      color: #42b883;
+      font-weight: bold;
+    }
+    
+    .resize-handle {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      cursor: col-resize;
+      background: transparent;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: rgba(66, 184, 131, 0.3);
+      }
+      
+      &:active {
+        background-color: rgba(66, 184, 131, 0.5);
       }
     }
     
