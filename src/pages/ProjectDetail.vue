@@ -117,19 +117,35 @@
                   <div class="resize-handle" @mousedown="startResize($event, 'dueDate')"></div>
                 </th>
               </tr>
-            </thead>
-            <tbody>
-              <tr v-for="task in displayTasks" :key="task.id">
-                <td :style="{ width: columnWidths.title + 'px' }" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
-                <td :style="{ width: columnWidths.assignee + 'px' }">{{ task.assignee || '-' }}</td>
-                <td :style="{ width: columnWidths.status + 'px' }">
-                  <span :class="['status-badge', `status-${task.status}`]">
-                    {{ getStatusText(task.status) }}
-                  </span>
+              <tr v-if="sort.column === 'order'" class="manual-sort-indicator">
+                <td :colspan="4" class="manual-sort-notice">
+                  🔀 Ручная сортировка (перетащите задачи для изменения порядка)
                 </td>
-                <td :style="{ width: columnWidths.dueDate + 'px' }">{{ task.dueDate || '-' }}</td>
               </tr>
-            </tbody>
+            </thead>
+            <draggable 
+              :model-value="displayTasks" 
+              tag="tbody"
+              item-key="id"
+              :animation="200"
+              ghost-class="ghost-row"
+              chosen-class="chosen-row"
+              drag-class="dragging-row"
+              @end="handleTableReorder"
+            >
+              <template #item="{ element: task, index }">
+                <tr :key="task.id" class="draggable-row">
+                  <td :style="{ width: columnWidths.title + 'px' }" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
+                  <td :style="{ width: columnWidths.assignee + 'px' }">{{ task.assignee || '-' }}</td>
+                  <td :style="{ width: columnWidths.status + 'px' }">
+                    <span :class="['status-badge', `status-${task.status}`]">
+                      {{ getStatusText(task.status) }}
+                    </span>
+                  </td>
+                  <td :style="{ width: columnWidths.dueDate + 'px' }">{{ task.dueDate || '-' }}</td>
+                </tr>
+              </template>
+            </draggable>
           </table>
         </div>
         
@@ -201,9 +217,10 @@ import { useTaskStore } from '../store/tasks'
 import { useProjectsStore } from '../store/projects'
 import TaskModal from '../components/TaskModal.vue'
 import KanbanColumn from '../components/KanbanColumn.vue'
-import type { IProject } from '../types'
 import type { Task } from '../store/tasks'
 import { localStorageHelper, LS_KEYS } from '../utils/localStorage'
+import type { TableSettings } from '../store/tasks'
+import draggable from 'vuedraggable'
 
 const router = useRouter()
 const route = useRoute()
@@ -229,6 +246,20 @@ const saveViewMode = () => {
 onMounted(async () => {
   initializeViewMode()
   
+  // Load table settings from store
+  const savedWidths = taskStore.loadTableSettings()
+  if (savedWidths) {
+    columnWidths.value = savedWidths
+  }
+  
+  // Initialize filters from store
+  if (taskStore.filters.status) {
+    statusFilter.value = taskStore.filters.status
+  }
+  if (taskStore.filters.assignee) {
+    assigneeFilter.value = taskStore.filters.assignee
+  }
+  
   // Initialize projects and tasks data
   await projectsStore.fetchProjects()
   await taskStore.fetchTasks(projectId.value)
@@ -245,8 +276,44 @@ const selectedTask = ref<Task | undefined>()
 // Delete project state
 const showDeleteConfirm = ref(false)
 
+// Drag and drop handlers
+const handleTableReorder = async (event: any) => {
+  const { oldIndex, newIndex } = event
+  
+  if (oldIndex !== newIndex) {
+    // Get current filtered tasks
+    const currentTasks = [...displayTasks.value]
+    const draggedTask = currentTasks[oldIndex]
+    
+    // Create new array with reordered tasks
+    const reorderedTasks = [...currentTasks]
+    reorderedTasks.splice(oldIndex, 1)
+    reorderedTasks.splice(newIndex, 0, draggedTask)
+    
+    // Update order values for all tasks in the current project
+    const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
+    const otherProjectTasks = allProjectTasks.filter(task => 
+      !reorderedTasks.some(updated => updated.id === task.id)
+    )
+    
+    // Update order for reordered tasks
+    const updatedTasks = reorderedTasks.map((task, index) => ({
+      ...task,
+      order: index
+    }))
+    
+    // Combine with other project tasks
+    const finalTasks = [...otherProjectTasks, ...updatedTasks]
+    
+    // Reset column sorting to manual order after drag & drop
+    taskStore.setSort({ column: 'order', direction: 'asc' })
+    
+    await taskStore.reorderTasks(finalTasks)
+  }
+}
+
 // Column widths for resizing
-const columnWidths = ref({
+const columnWidths = ref<TableSettings['columnWidths']>({
   title: 300,
   assignee: 150,
   status: 120,
@@ -355,6 +422,11 @@ const handleResize = (event: MouseEvent) => {
 }
 
 const stopResize = () => {
+  if (resizing.value && resizingColumn.value) {
+    // Save column widths to store
+    taskStore.saveTableSettings(columnWidths.value)
+  }
+  
   resizing.value = false
   resizingColumn.value = null
   document.removeEventListener('mousemove', handleResize)
@@ -434,10 +506,14 @@ const deleteProject = async () => {
 // Kanban drag & drop handlers
 const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number) => {
   try {
+    // First update the task status
     await taskStore.updateTask(taskId, { status: newStatus })
     
-    // Use projectTasks
-    const allProjectTasks = projectTasks.value
+    // Reset sorting to manual order after kanban move
+    taskStore.setSort({ column: 'order', direction: 'asc' })
+    
+    // Get updated project tasks
+    const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
     
     // Group tasks by status for this project
     const statusGroups = {
@@ -459,7 +535,7 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     }
     
     // Reorder the target status column
-    const targetTasks = statusGroups[newStatus].filter(task => task.projectId === projectId.value)
+    const targetTasks = statusGroups[newStatus]
     const reorderedTargetTasks = insertTaskAtPosition(targetTasks, newOrder)
     
     // Build the complete reordered list
@@ -467,7 +543,7 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     allStatuses.forEach(status => {
       const statusTasks = status === newStatus 
         ? reorderedTargetTasks
-        : statusGroups[status].filter(task => task.projectId === projectId.value)
+        : statusGroups[status]
       
       statusTasks.forEach((task, index) => {
         reorderedTasks.push({ ...task, order: index })
@@ -482,8 +558,8 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
 
 const handleTaskReorder = async (taskId: number, newOrder: number) => {
   try {
-    // Use projectTasks
-    const allProjectTasks = projectTasks.value
+    // Get updated project tasks
+    const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
     
     // Group tasks by status for this project
     const statusGroups = {
@@ -745,6 +821,19 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     thead {
       background: #f8f9fa;
       
+      .manual-sort-indicator {
+        background: #e8f5e8;
+        
+        .manual-sort-notice {
+          padding: 0.5rem 1rem;
+          text-align: center;
+          font-size: 0.85rem;
+          color: #2d5a2d;
+          font-weight: 500;
+          border-bottom: 1px solid #d4edda;
+        }
+      }
+      
       th {
         padding: 1rem;
         text-align: left;
@@ -811,6 +900,43 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
           &:hover {
             text-decoration: underline;
           }
+        }
+      }
+      
+      // Drag and drop styles
+      .draggable-row {
+        cursor: grab;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #f0f8f0;
+        }
+        
+        &:active {
+          cursor: grabbing;
+        }
+      }
+      
+      .ghost-row {
+        opacity: 0.5;
+        background: #e8f4f8 !important;
+        border: 2px dashed #42b883;
+      }
+      
+      .chosen-row {
+        background: #d4edda !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: scale(1.02);
+      }
+      
+      .dragging-row {
+        background: #42b883 !important;
+        color: white;
+        opacity: 0.9;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        
+        .task-title {
+          color: white;
         }
       }
     }
