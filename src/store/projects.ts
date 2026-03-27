@@ -9,26 +9,20 @@ import { mockProjects } from '../mocks/projects'
 export const useProjectsStore = defineStore('projects', () => {
   const toast = useToast()
   
-  // State
   const projects = ref<IProject[]>([])
 
-  // Create persistence utility
   const persistence = createPersistence(
     LS_KEYS.PROJECTS,
     () => projects.value,
     (state) => { projects.value = state }
   )
 
-  // Initialize from LocalStorage
   const initializeFromStorage = () => persistence.initialize()
 
-  // Save to LocalStorage
   const saveToStorage = () => persistence.save()
 
-  // Initialize on store creation
   initializeFromStorage()
 
-  // Seed demo data on first visit
   const seedData = () => {
     const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_PROJECTS)
     if (!hasSeeded && projects.value.length === 0) {
@@ -39,18 +33,15 @@ export const useProjectsStore = defineStore('projects', () => {
   }
   seedData()
 
-  // Getters
   const getAllProjects = computed(() => projects.value)
   
   const getProjectById = computed(() => {
     return (id: number) => projects.value.find(project => project.id === id)
   })
 
-  // Actions
   const fetchProjects = async () => {
     const appStore = useAppStore()
     
-    // Try to load from LocalStorage first
     const hasStoredData = initializeFromStorage()
     if (hasStoredData) {
       return
@@ -98,19 +89,12 @@ export const useProjectsStore = defineStore('projects', () => {
   }
 
   return {
-    // State
     projects,
-    
-    // Getters
     getAllProjects,
     getProjectById,
-    
-    // Actions
     fetchProjects,
     addProject,
     deleteProject,
-    
-    // Internal methods (for hydration)
     initializeFromStorage,
     saveToStorage
   }

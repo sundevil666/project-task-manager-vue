@@ -199,7 +199,6 @@ const formatDate = (dateString: string) => {
   font-size: 0.875rem;
 }
 
-// Drag and drop стили
 .ghost-card {
   opacity: 0.5;
   background: #e5e7eb;

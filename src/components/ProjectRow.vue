@@ -8,7 +8,6 @@
     </td>
   </tr>
   
-  <!-- Delete confirmation modal -->
   <div v-if="showConfirm" class="modal-overlay">
     <div class="confirm-modal">
       <h3>Удалить проект?</h3>
@@ -49,15 +48,12 @@ const cancelDelete = () => {
 
 const deleteProject = async () => {
   try {
-    // Delete all tasks for this project
     await taskStore.deleteTasksByProjectId(props.project.id)
     
-    // Delete the project
     await projectsStore.deleteProject(props.project.id)
     
     showConfirm.value = false
   } catch {
-    // Silent fail - errors handled by toast in store
   }
 }
 </script>
@@ -105,7 +101,6 @@ const deleteProject = async () => {
   border-bottom: none;
 }
 
-// Delete confirmation modal styles
 .modal-overlay {
   position: fixed;
   top: 0;

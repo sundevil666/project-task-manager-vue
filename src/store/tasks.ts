@@ -6,25 +6,21 @@ import { createPersistence, LS_KEYS, localStorageHelper } from '../utils/localSt
 import { useToast } from 'vue-toastification'
 import { mockTasks } from '../mocks/tasks'
 
-// Enhanced Task interface matching requirements
 export interface Task extends Omit<ApiTask, 'status'> {
   status: 'todo' | 'in-progress' | 'done'
   order: number
 }
 
-// Filter types
 export interface TaskFilters {
   status?: Task['status']
   assignee?: string
 }
 
-// Sort types
 export interface TaskSort {
   column: 'status' | 'dueDate' | 'title' | 'assignee' | 'order'
   direction: 'asc' | 'desc'
 }
 
-// Table settings interface
 export interface TableSettings {
   sort: TaskSort
   filters: TaskFilters
@@ -36,7 +32,6 @@ export interface TableSettings {
   }
 }
 
-// Kanban column type
 export interface KanbanColumn {
   status: Task['status']
   tasks: Task[]
@@ -45,26 +40,23 @@ export interface KanbanColumn {
 export const useTaskStore = defineStore('tasks', () => {
   const toast = useToast()
   
-  // State
   const tasks = ref<Task[]>([])
   const loading = ref(false)
   const filters = ref<TaskFilters>({})
   const sort = ref<TaskSort>({ column: 'status', direction: 'asc' })
 
-  // Create persistence utility
   const persistence = createPersistence(
     LS_KEYS.TASKS,
     () => tasks.value,
     (state) => { tasks.value = state }
   )
 
-  // Helper functions to map between API status and task status
   const mapApiStatusToTaskStatus = (apiStatus: string): Task['status'] => {
     switch (apiStatus) {
       case 'Pending': return 'todo'
       case 'In Progress': return 'in-progress'
       case 'Completed': return 'done'
-      case 'Blocked': return 'todo' // Map blocked to todo for now
+      case 'Blocked': return 'todo'
       default: return 'todo'
     }
   }
@@ -78,19 +70,15 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  // Initialize from LocalStorage
   const initializeFromStorage = () => {
     const result = persistence.initialize()
     return result
   }
 
-  // Save to LocalStorage
   const saveToStorage = () => persistence.save()
 
-  // Initialize on store creation
   initializeFromStorage()
 
-  // Seed demo data on first visit
   const seedData = () => {
     const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_TASKS)
     if (!hasSeeded && tasks.value.length === 0) {
@@ -106,7 +94,6 @@ export const useTaskStore = defineStore('tasks', () => {
   }
   seedData()
 
-  // Getters
   const getTasksByProjectId = computed(() => {
     return (projectId: number) => {
       return tasks.value
@@ -118,17 +105,14 @@ export const useTaskStore = defineStore('tasks', () => {
   const filteredTasks = computed(() => {
     let filtered = [...tasks.value]
 
-    // Apply status filter
     if (filters.value.status) {
       filtered = filtered.filter(task => task.status === filters.value.status)
     }
 
-    // Apply assignee filter
     if (filters.value.assignee) {
       filtered = filtered.filter(task => task.assignee === filters.value.assignee)
     }
 
-    // Sort by order
     return filtered.sort((a, b) => a.order - b.order)
   })
 
@@ -136,23 +120,19 @@ export const useTaskStore = defineStore('tasks', () => {
     return (projectId: number) => {
       let filtered = tasks.value.filter(task => task.projectId === projectId)
 
-      // Apply status filter
       if (filters.value.status) {
         filtered = filtered.filter(task => task.status === filters.value.status)
       }
 
-      // Apply assignee filter
       if (filters.value.assignee) {
         filtered = filtered.filter(task => 
           task.assignee?.toLowerCase().includes(filters.value.assignee!.toLowerCase())
         )
       }
 
-      // Apply sorting
       filtered.sort((a, b) => {
         const { column, direction } = sort.value
         
-        // If sorting by order, use manual order
         if (column === 'order') {
           return a.order - b.order
         }
@@ -201,7 +181,6 @@ export const useTaskStore = defineStore('tasks', () => {
       statusGroups[task.status].push(task)
     })
 
-    // Sort tasks within each status by order
     Object.keys(statusGroups).forEach(status => {
       statusGroups[status as Task['status']].sort((a, b) => a.order - b.order)
     })
@@ -218,11 +197,9 @@ export const useTaskStore = defineStore('tasks', () => {
     ]
   })
 
-  // Actions
   const fetchTasks = async (projectId?: number) => {
     loading.value = true
     
-    // Try to load from LocalStorage first
     const hasStoredData = initializeFromStorage()
     if (hasStoredData && projectId === undefined) {
       loading.value = false
@@ -238,7 +215,6 @@ export const useTaskStore = defineStore('tasks', () => {
       }))
       
       if (projectId !== undefined) {
-        // Only add tasks that don't exist in LocalStorage
         const existingProjectTasks = tasks.value.filter(task => task.projectId === projectId)
         const existingIds = new Set(existingProjectTasks.map(t => t.id))
         
@@ -247,7 +223,6 @@ export const useTaskStore = defineStore('tasks', () => {
         
         tasks.value = [...otherProjectTasks, ...existingProjectTasks, ...newTasks]
       } else {
-        // Replace all tasks only if no LocalStorage data
         if (!hasStoredData) {
           tasks.value = fetchedTasks
         }
@@ -255,7 +230,6 @@ export const useTaskStore = defineStore('tasks', () => {
       
       saveToStorage()
     } catch {
-      // Silent fail - errors handled by toast in caller
     } finally {
       loading.value = false
     }
@@ -264,7 +238,6 @@ export const useTaskStore = defineStore('tasks', () => {
   const addTask = async (taskData: Omit<Task, 'id' | 'createdDate' | 'order'>) => {
     loading.value = true
     try {
-      // Find the highest order for this project
       const maxOrder = Math.max(
         ...tasks.value
           .filter(t => t.projectId === taskData.projectId)
@@ -302,7 +275,6 @@ export const useTaskStore = defineStore('tasks', () => {
   const updateTask = async (id: number, updates: Partial<Omit<Task, 'id' | 'createdDate' | 'projectId'>>) => {
     loading.value = true
     try {
-      // Map status back to API format if present
       const apiUpdates: any = { ...updates }
       if (updates.status) {
         apiUpdates.status = mapTaskStatusToApiStatus(updates.status)
@@ -316,7 +288,7 @@ export const useTaskStore = defineStore('tasks', () => {
           tasks.value[index] = {
             ...response.data,
             status: mapApiStatusToTaskStatus(response.data.status),
-            order: oldTask.order // Preserve existing order
+            order: oldTask.order
           }
           saveToStorage()
         }
@@ -352,18 +324,15 @@ export const useTaskStore = defineStore('tasks', () => {
   const deleteTasksByProjectId = async (projectId: number) => {
     loading.value = true
     try {
-      // Delete all tasks for the project
       const tasksToDelete = tasks.value.filter(task => task.projectId === projectId)
       
       for (const task of tasksToDelete) {
         try {
           await api.deleteTask(task.id)
-        } catch (error) {
-          // Silent fail for individual task deletion
+        } catch {
         }
       }
       
-      // Remove from local state
       tasks.value = tasks.value.filter(task => task.projectId !== projectId)
       saveToStorage()
       
@@ -387,13 +356,11 @@ export const useTaskStore = defineStore('tasks', () => {
         }
       })
 
-      // Sort tasks by order to maintain the dragged order
       tasks.value.sort((a, b) => a.order - b.order)
       
       saveToStorage()
       return true
     } catch {
-      // Silent fail for reorder errors
     } finally {
       loading.value = false
     }
@@ -422,7 +389,6 @@ export const useTaskStore = defineStore('tasks', () => {
     saveTableSettings()
   }
 
-  // Save table settings to LocalStorage
   const saveTableSettings = (columnWidths?: TableSettings['columnWidths']) => {
     try {
       const settings: TableSettings = {
@@ -437,11 +403,9 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       localStorageHelper.set(LS_KEYS.TABLE_SETTINGS, settings)
     } catch {
-      // Silent fail for save errors
     }
   }
 
-  // Load table settings from LocalStorage
   const loadTableSettings = () => {
     try {
       const settings = localStorageHelper.get<TableSettings>(LS_KEYS.TABLE_SETTINGS)
@@ -451,29 +415,22 @@ export const useTaskStore = defineStore('tasks', () => {
         return settings.columnWidths
       }
     } catch {
-      // Silent fail for loading errors
     }
     return null
   }
 
-  // Watch for filter changes and save to LocalStorage
   watch(filters, () => saveTableSettings(), { deep: true })
 
   return {
-    // State
     tasks,
     loading,
     filters,
     sort,
-
-    // Getters
     getTasksByProjectId,
     filteredTasks,
     getFilteredAndSortedTasks,
     getTasksByStatus,
     kanbanColumns,
-
-    // Actions
     fetchTasks,
     addTask,
     updateTask,
@@ -484,15 +441,10 @@ export const useTaskStore = defineStore('tasks', () => {
     clearFilters,
     setSort,
     toggleSort,
-
-    // Table settings
     saveTableSettings,
     loadTableSettings,
-
-    // Internal methods (for hydration)
     initializeFromStorage,
     saveToStorage,
-    // Helper functions (for tests)
     mapApiStatusToTaskStatus,
     mapTaskStatusToApiStatus
   }

@@ -27,7 +27,6 @@
         <button @click="openCreateModal" class="add-task-btn">+ Добавить задачу</button>
       </div>
       
-      <!-- Filters Section -->
       <div class="filters-section">
         <div class="filter-group">
           <label for="assignee-filter">Исполнитель:</label>
@@ -186,7 +185,6 @@
       <button @click="goBack" class="back-button">Вернуться к проектам</button>
     </div>
     
-    <!-- Task Modal -->
     <TaskModal
       :is-open="isModalOpen"
       :mode="modalMode"
@@ -195,7 +193,6 @@
       @close="closeModal"
     />
     
-    <!-- Delete Project Confirmation Modal -->
     <div v-if="showDeleteConfirm" class="modal-overlay">
       <div class="confirm-modal">
         <h3>Удалить проект?</h3>
@@ -229,7 +226,6 @@ const projectsStore = useProjectsStore()
 
 const viewMode = ref<'table' | 'kanban'>('table')
 
-// Initialize view mode from LocalStorage
 const initializeViewMode = () => {
   const savedMode = localStorageHelper.get<'table' | 'kanban'>(LS_KEYS.VIEW_MODE)
   if (savedMode) {
@@ -237,22 +233,18 @@ const initializeViewMode = () => {
   }
 }
 
-// Save view mode to LocalStorage
 const saveViewMode = () => {
   localStorageHelper.set(LS_KEYS.VIEW_MODE, viewMode.value)
 }
 
-// Initialize on mount
 onMounted(async () => {
   initializeViewMode()
   
-  // Load table settings from store
   const savedWidths = taskStore.loadTableSettings()
   if (savedWidths) {
     columnWidths.value = savedWidths
   }
   
-  // Initialize filters from store
   if (taskStore.filters.status) {
     statusFilter.value = taskStore.filters.status
   }
@@ -260,59 +252,47 @@ onMounted(async () => {
     assigneeFilter.value = taskStore.filters.assignee
   }
   
-  // Initialize projects and tasks data
   await projectsStore.fetchProjects()
   await taskStore.fetchTasks(projectId.value)
 })
 
-// Watch for view mode changes
 watch(viewMode, saveViewMode)
 
-// Modal state
 const isModalOpen = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
 const selectedTask = ref<Task | undefined>()
 
-// Delete project state
 const showDeleteConfirm = ref(false)
 
-// Drag and drop handlers
 const handleTableReorder = async (event: any) => {
   const { oldIndex, newIndex } = event
   
   if (oldIndex !== newIndex) {
-    // Get current filtered tasks
     const currentTasks = [...displayTasks.value]
     const draggedTask = currentTasks[oldIndex]
     
-    // Create new array with reordered tasks
     const reorderedTasks = [...currentTasks]
     reorderedTasks.splice(oldIndex, 1)
     reorderedTasks.splice(newIndex, 0, draggedTask)
     
-    // Update order values for all tasks in the current project
     const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
     const otherProjectTasks = allProjectTasks.filter(task => 
       !reorderedTasks.some(updated => updated.id === task.id)
     )
     
-    // Update order for reordered tasks
     const updatedTasks = reorderedTasks.map((task, index) => ({
       ...task,
       order: index
     }))
     
-    // Combine with other project tasks
     const finalTasks = [...otherProjectTasks, ...updatedTasks]
     
-    // Reset column sorting to manual order after drag & drop
     taskStore.setSort({ column: 'order', direction: 'asc' })
     
     await taskStore.reorderTasks(finalTasks)
   }
 }
 
-// Column widths for resizing
 const columnWidths = ref<TableSettings['columnWidths']>({
   title: 300,
   assignee: 150,
@@ -320,7 +300,6 @@ const columnWidths = ref<TableSettings['columnWidths']>({
   dueDate: 150
 })
 
-// Resize state
 const resizing = ref(false)
 const resizingColumn = ref<keyof typeof columnWidths.value | null>(null)
 const startX = ref(0)
@@ -328,7 +307,6 @@ const startWidth = ref(0)
 
 const setMode = (mode: 'table' | 'kanban') => {
   viewMode.value = mode
-  // No data refetching needed - both views use the same store
 }
 
 const project = computed(() => {
@@ -341,9 +319,7 @@ const projectTasks = computed(() => taskStore.getTasksByProjectId(projectId.valu
 const isLoading = computed(() => taskStore.loading)
 const sort = computed(() => taskStore.sort)
 
-// Kanban tasks grouped by status - using project tasks and applying filters
 const todoTasks = computed(() => {
-  // Skip entire column if status filter is set to something else
   if (statusFilter.value && statusFilter.value !== 'todo') return []
   
   return projectTasks.value
@@ -351,7 +327,6 @@ const todoTasks = computed(() => {
     .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
 })
 const inProgressTasks = computed(() => {
-  // Skip entire column if status filter is set to something else
   if (statusFilter.value && statusFilter.value !== 'in-progress') return []
   
   return projectTasks.value
@@ -359,7 +334,6 @@ const inProgressTasks = computed(() => {
     .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
 })
 const doneTasks = computed(() => {
-  // Skip entire column if status filter is set to something else
   if (statusFilter.value && statusFilter.value !== 'done') return []
   
   return projectTasks.value
@@ -367,21 +341,17 @@ const doneTasks = computed(() => {
     .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
 })
 
-// Filter reactive refs
 const assigneeFilter = ref('')
 const statusFilter = ref('')
 
-// Computed property for filtered and sorted tasks
 const displayTasks = computed(() => {
   return taskStore.getFilteredAndSortedTasks(projectId.value)
 })
 
-// Check if filters are active
 const hasActiveFilters = computed(() => {
   return assigneeFilter.value.trim() !== '' || statusFilter.value !== ''
 })
 
-// Watch for filter changes and update store
 watch([assigneeFilter, statusFilter], ([newAssignee, newStatus]) => {
   taskStore.setFilters({
     assignee: newAssignee.trim() || undefined,
@@ -389,19 +359,16 @@ watch([assigneeFilter, statusFilter], ([newAssignee, newStatus]) => {
   })
 })
 
-// Sort handler
 const handleSort = (column: 'status' | 'dueDate' | 'title' | 'assignee') => {
   taskStore.toggleSort(column)
 }
 
-// Clear filters
 const clearFilters = () => {
   assigneeFilter.value = ''
   statusFilter.value = ''
   taskStore.clearFilters()
 }
 
-// Column resizing handlers
 const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value) => {
   event.preventDefault()
   resizing.value = true
@@ -417,13 +384,12 @@ const handleResize = (event: MouseEvent) => {
   if (!resizing.value || !resizingColumn.value) return
   
   const diff = event.clientX - startX.value
-  const newWidth = Math.max(80, startWidth.value + diff) // Minimum width of 80px
+  const newWidth = Math.max(80, startWidth.value + diff)
   columnWidths.value[resizingColumn.value] = newWidth
 }
 
 const stopResize = () => {
   if (resizing.value && resizingColumn.value) {
-    // Save column widths to store
     taskStore.saveTableSettings(columnWidths.value)
   }
   
@@ -443,7 +409,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for project changes (not view mode changes)
 watch(() => route.params.id, async (newId, oldId) => {
   if (newId && newId !== oldId) {
     await taskStore.fetchTasks(Number(newId))
@@ -459,7 +424,6 @@ const getStatusText = (status: string) => {
   }
 }
 
-// Modal functions
 const openCreateModal = () => {
   modalMode.value = 'create'
   selectedTask.value = undefined
@@ -477,7 +441,6 @@ const closeModal = () => {
   selectedTask.value = undefined
 }
 
-// Delete project functions
 const confirmDeleteProject = () => {
   showDeleteConfirm.value = true
 }
@@ -490,32 +453,23 @@ const deleteProject = async () => {
   if (!project.value) return
   
   try {
-    // Delete all tasks for this project
     await taskStore.deleteTasksByProjectId(project.value.id)
     
-    // Delete the project
     await projectsStore.deleteProject(project.value.id)
     
-    // Redirect to projects page
     router.push('/')
   } catch {
-    // Silent fail - errors handled by toast in store
   }
 }
 
-// Kanban drag & drop handlers
 const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number) => {
   try {
-    // First update the task status
     await taskStore.updateTask(taskId, { status: newStatus })
     
-    // Reset sorting to manual order after kanban move
     taskStore.setSort({ column: 'order', direction: 'asc' })
     
-    // Get updated project tasks
     const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
     
-    // Group tasks by status for this project
     const statusGroups = {
       'todo': allProjectTasks.filter(t => t.status === 'todo'),
       'in-progress': allProjectTasks.filter(t => t.status === 'in-progress'),
@@ -524,7 +478,6 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     
     const reorderedTasks: Task[] = []
     
-    // Helper to insert task at specific position
     const insertTaskAtPosition = (tasks: Task[], insertOrder: number) => {
       const movedTask = tasks.find(t => t.id === taskId)
       if (!movedTask) return tasks
@@ -534,11 +487,9 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
       return newTasks
     }
     
-    // Reorder the target status column
     const targetTasks = statusGroups[newStatus]
     const reorderedTargetTasks = insertTaskAtPosition(targetTasks, newOrder)
     
-    // Build the complete reordered list
     const allStatuses: Task['status'][] = ['todo', 'in-progress', 'done']
     allStatuses.forEach(status => {
       const statusTasks = status === newStatus 
@@ -552,16 +503,13 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     
     await taskStore.reorderTasks(reorderedTasks)
   } catch {
-    // Silent fail - errors handled by toast in store
   }
 }
 
 const handleTaskReorder = async (taskId: number, newOrder: number) => {
   try {
-    // Get updated project tasks
     const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
     
-    // Group tasks by status for this project
     const statusGroups = {
       'todo': allProjectTasks.filter(t => t.status === 'todo'),
       'in-progress': allProjectTasks.filter(t => t.status === 'in-progress'),
@@ -570,7 +518,6 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     
     const reorderedTasks: Task[] = []
     
-    // Find which status the task belongs to
     let taskStatus: Task['status'] | null = null
     for (const [status, tasks] of Object.entries(statusGroups)) {
       if (tasks.some(t => t.id === taskId)) {
@@ -581,7 +528,6 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     
     if (!taskStatus) return
     
-    // Reorder tasks within the same status
     const statusTasks = statusGroups[taskStatus]
     const movedTask = statusTasks.find(t => t.id === taskId)
     if (!movedTask) return
@@ -592,7 +538,6 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     newTasks.splice(currentIndex, 1)
     newTasks.splice(newOrder, 0, movedTask)
     
-    // Build the complete reordered list
     const allStatuses: Task['status'][] = ['todo', 'in-progress', 'done']
     allStatuses.forEach(status => {
       const statusTasks = status === taskStatus 
@@ -606,7 +551,6 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     
     await taskStore.reorderTasks(reorderedTasks)
   } catch {
-    // Silent fail - errors handled by toast in store
   }
 }
 </script>
@@ -903,7 +847,6 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
         }
       }
       
-      // Drag and drop styles
       .draggable-row {
         cursor: grab;
         transition: all 0.2s ease;
@@ -992,7 +935,6 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
   }
 }
 
-// Delete confirmation modal styles
 .modal-overlay {
   position: fixed;
   top: 0;

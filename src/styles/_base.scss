@@ -1,6 +1,5 @@
 @use 'variables' as *;
 
-// Reset and base styles
 *,
 *::before,
 *::after {
@@ -28,7 +27,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-// Typography
 h1, h2, h3, h4, h5, h6 {
   font-weight: $font-weight-semibold;
   line-height: $line-height-tight;
@@ -66,7 +64,6 @@ p {
   color: $text-primary;
 }
 
-// Links
 a {
   color: $primary-color;
   text-decoration: none;
@@ -83,7 +80,6 @@ a {
   }
 }
 
-// Buttons
 button {
   font-family: inherit;
   font-size: $font-size-base;
@@ -208,7 +204,6 @@ button {
   }
 }
 
-// Form elements
 input,
 textarea,
 select {
@@ -235,7 +230,6 @@ select {
   }
 }
 
-// Lists
 ul, ol {
   margin-bottom: $spacing-md;
   padding-left: $spacing-lg;
@@ -245,7 +239,6 @@ li {
   margin-bottom: $spacing-xs;
 }
 
-// Utility classes
 .sr-only {
   position: absolute;
   width: 1px;
@@ -262,7 +255,6 @@ li {
   @extend .sr-only;
 }
 
-// Scrollbar
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -281,7 +273,6 @@ li {
   }
 }
 
-// Selection
 ::selection {
   background-color: rgba($primary-color, 0.2);
   color: $text-primary;

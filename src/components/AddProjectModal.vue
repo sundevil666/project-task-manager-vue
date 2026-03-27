@@ -112,7 +112,6 @@ const saveProject = async () => {
     
     closeModal()
   } catch {
-    // Silent fail - errors handled by toast in store
   } finally {
     isSubmitting.value = false
   }

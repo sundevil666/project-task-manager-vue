@@ -216,7 +216,6 @@ const handleSubmit = async () => {
 
     closeModal()
   } catch {
-    // Silent fail - errors handled by toast in store
   } finally {
     isLoading.value = false
   }

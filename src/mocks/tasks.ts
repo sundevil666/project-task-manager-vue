@@ -59,8 +59,6 @@ export const mockTasks: ITask[] = [
     createdDate: '2024-01-19',
     order: 3
   },
-  
-  // Mobile App Development Tasks
   {
     id: 5,
     projectId: 2,
@@ -97,8 +95,6 @@ export const mockTasks: ITask[] = [
     createdDate: '2024-02-04',
     order: 6
   },
-  
-  // API Integration Tasks
   {
     id: 8,
     projectId: 3,
@@ -135,8 +131,6 @@ export const mockTasks: ITask[] = [
     createdDate: '2024-01-13',
     order: 9
   },
-  
-  // Database Migration Tasks
   {
     id: 11,
     projectId: 4,
@@ -161,8 +155,6 @@ export const mockTasks: ITask[] = [
     createdDate: '2024-02-17',
     order: 11
   },
-  
-  // Security Audit Tasks
   {
     id: 13,
     projectId: 5,

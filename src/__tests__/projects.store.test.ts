@@ -3,7 +3,6 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useProjectsStore } from '../store/projects'
 import * as apiModule from '../services/api'
 
-// Mocks
 vi.mock('../services/api', () => ({
   api: {
     getProjects: vi.fn(),
@@ -32,7 +31,7 @@ describe('useProjectsStore', () => {
 
   beforeEach(() => {
     localStorage.clear()
-    localStorage.setItem('has_seeded_projects', 'true') // Skip seeding
+    localStorage.setItem('has_seeded_projects', 'true')
     localStorage.setItem('has_seeded_tasks', 'true')
     setActivePinia(createPinia())
     store = useProjectsStore()
@@ -91,7 +90,6 @@ describe('useProjectsStore', () => {
       expect(result).toEqual(newProject)
       expect(apiModule.api.createProject).toHaveBeenCalledWith({ name: 'New Project', description: 'New Desc' })
       
-      // Check localStorage
       const stored = JSON.parse(localStorage.getItem('projects') || '[]')
       expect(stored).toContainEqual(newProject)
     })

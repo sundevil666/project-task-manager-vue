@@ -3,7 +3,6 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useTaskStore, type Task } from '../store/tasks'
 import * as apiModule from '../services/api'
 
-// Mocks
 vi.mock('../services/api', () => ({
   api: {
     getTasks: vi.fn(),
@@ -51,7 +50,7 @@ describe('useTaskStore', () => {
 
   beforeEach(() => {
     localStorage.clear()
-    localStorage.setItem('has_seeded_projects', 'true') // Skip seeding
+    localStorage.setItem('has_seeded_projects', 'true')
     localStorage.setItem('has_seeded_tasks', 'true')
     setActivePinia(createPinia())
     store = useTaskStore()
