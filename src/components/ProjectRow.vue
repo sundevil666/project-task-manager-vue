@@ -1,9 +1,15 @@
 <template>
   <tr class="project-row">
-    <td class="project-row__cell">{{ project.id }}</td>
-    <td class="project-row__cell"><router-link :to="`/project/${project.id}`">{{ project.name }}</router-link></td>
-    <td class="project-row__cell">{{ project.taskCount }}</td>
-    <td class="project-row__cell">
+    <td class="project-row__cell" :style="{ width: widths.id + 'px' }">{{ project.id }}</td>
+    <td class="project-row__cell" :style="{ width: widths.name + 'px' }"><router-link :to="`/project/${project.id}`">{{ project.name }}</router-link></td>
+    <td class="project-row__cell" :style="{ width: widths.taskCount + 'px' }">{{ project.taskCount }}</td>
+    <td class="project-row__cell" :style="{ width: widths.status + 'px' }">
+      <span class="status-badge" :class="`status--${project.status.toLowerCase().replace(' ', '-')}`">
+        {{ project.status }}
+      </span>
+    </td>
+    <td class="project-row__cell" :style="{ width: widths.createdAt + 'px' }">{{ formattedDate }}</td>
+    <td class="project-row__cell" :style="{ width: widths.actions + 'px' }">
       <button @click="confirmDelete" class="delete-btn">🗑️</button>
     </td>
   </tr>
@@ -22,19 +28,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useProjectsStore } from '../store/projects'
 import { useTaskStore } from '../store/tasks'
-import type { IProject } from '../types'
+import type { IProject } from '../mocks/projects'
 
 const props = defineProps<{
   project: IProject
+  widths: {
+    id: number
+    name: number
+    taskCount: number
+    status: number
+    createdAt: number
+    actions: number
+  }
 }>()
 
 const projectsStore = useProjectsStore()
 const taskStore = useTaskStore()
 
 const showConfirm = ref(false)
+
+const formattedDate = computed(() => {
+  const date = new Date(props.project.createdDate)
+  return date.toLocaleDateString('uk-UA', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).replace(/\//g, '.')
+})
 
 const confirmDelete = () => {
   showConfirm.value = true
@@ -98,6 +121,35 @@ const deleteProject = async () => {
 
 .project-row:last-child .project-row__cell {
   border-bottom: none;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+
+  &.status--planning {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  &.status--in-progress {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  &.status--completed {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  &.status--on-hold {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
 }
 
 .modal-overlay {
