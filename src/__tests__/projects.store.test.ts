@@ -31,9 +31,10 @@ describe('useProjectsStore', () => {
   let store: ReturnType<typeof useProjectsStore>
 
   beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem('has_seeded_data', 'true') // Skip seeding
     setActivePinia(createPinia())
     store = useProjectsStore()
-    localStorage.clear()
     vi.clearAllMocks()
   })
 

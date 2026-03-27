@@ -58,6 +58,26 @@ export const useTaskStore = defineStore('tasks', () => {
     (state) => { tasks.value = state }
   )
 
+  // Helper functions to map between API status and task status
+  const mapApiStatusToTaskStatus = (apiStatus: string): Task['status'] => {
+    switch (apiStatus) {
+      case 'Pending': return 'todo'
+      case 'In Progress': return 'in-progress'
+      case 'Completed': return 'done'
+      case 'Blocked': return 'todo' // Map blocked to todo for now
+      default: return 'todo'
+    }
+  }
+
+  const mapTaskStatusToApiStatus = (taskStatus: Task['status']): string => {
+    switch (taskStatus) {
+      case 'todo': return 'Pending'
+      case 'in-progress': return 'In Progress'
+      case 'done': return 'Completed'
+      default: return 'Pending'
+    }
+  }
+
   // Initialize from LocalStorage
   const initializeFromStorage = () => {
     const result = persistence.initialize()
@@ -448,40 +468,20 @@ export const useTaskStore = defineStore('tasks', () => {
   // Watch for filter changes and save to LocalStorage
   watch(filters, () => saveTableSettings(), { deep: true })
 
-  // Helper functions to map between API status and task status
-  const mapApiStatusToTaskStatus = (apiStatus: string): Task['status'] => {
-    switch (apiStatus) {
-      case 'Pending': return 'todo'
-      case 'In Progress': return 'in-progress'
-      case 'Completed': return 'done'
-      case 'Blocked': return 'todo' // Map blocked to todo for now
-      default: return 'todo'
-    }
-  }
-
-  const mapTaskStatusToApiStatus = (taskStatus: Task['status']): string => {
-    switch (taskStatus) {
-      case 'todo': return 'Pending'
-      case 'in-progress': return 'In Progress'
-      case 'done': return 'Completed'
-      default: return 'Pending'
-    }
-  }
-
   return {
     // State
     tasks,
     loading,
     filters,
     sort,
-    
+
     // Getters
     getTasksByProjectId,
     filteredTasks,
     getFilteredAndSortedTasks,
     getTasksByStatus,
     kanbanColumns,
-    
+
     // Actions
     fetchTasks,
     addTask,
@@ -493,13 +493,16 @@ export const useTaskStore = defineStore('tasks', () => {
     clearFilters,
     setSort,
     toggleSort,
-    
+
     // Table settings
     saveTableSettings,
     loadTableSettings,
-    
+
     // Internal methods (for hydration)
     initializeFromStorage,
-    saveToStorage
+    saveToStorage,
+    // Helper functions (for tests)
+    mapApiStatusToTaskStatus,
+    mapTaskStatusToApiStatus
   }
 })
