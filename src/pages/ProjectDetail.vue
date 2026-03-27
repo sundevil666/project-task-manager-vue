@@ -21,7 +21,7 @@
             Kanban
           </button>
         </div>
-        <button class="add-task-btn">+ Добавить задачу</button>
+        <button @click="openCreateModal" class="add-task-btn">+ Добавить задачу</button>
       </div>
       
       <!-- Filters Section -->
@@ -117,7 +117,7 @@
             </thead>
             <tbody>
               <tr v-for="task in displayTasks" :key="task.id">
-                <td :style="{ width: columnWidths.title + 'px' }">{{ task.title }}</td>
+                <td :style="{ width: columnWidths.title + 'px' }" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
                 <td :style="{ width: columnWidths.assignee + 'px' }">{{ task.assignee || '-' }}</td>
                 <td :style="{ width: columnWidths.status + 'px' }">
                   <span :class="['status-badge', `status-${task.status}`]">
@@ -160,6 +160,15 @@
       <p>Проект, который вы ищете, не существует.</p>
       <button @click="goBack" class="back-button">Вернуться к проектам</button>
     </div>
+    
+    <!-- Task Modal -->
+    <TaskModal
+      :is-open="isModalOpen"
+      :mode="modalMode"
+      :task="selectedTask"
+      :project-id="projectId"
+      @close="closeModal"
+    />
   </div>
 </template>
 
@@ -168,13 +177,20 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { mockProjects } from '../mocks/projects'
 import { useTaskStore } from '../store/tasks'
+import TaskModal from '../components/TaskModal.vue'
 import type { IProject } from '../types'
+import type { Task } from '../store/tasks'
 
 const router = useRouter()
 const route = useRoute()
 const taskStore = useTaskStore()
 
 const viewMode = ref<'table' | 'kanban'>('table')
+
+// Modal state
+const isModalOpen = ref(false)
+const modalMode = ref<'create' | 'edit'>('create')
+const selectedTask = ref<Task | undefined>()
 
 // Column widths for resizing
 const columnWidths = ref({
@@ -290,6 +306,24 @@ const getStatusText = (status: string) => {
     case 'done': return 'Завершено'
     default: return status
   }
+}
+
+// Modal functions
+const openCreateModal = () => {
+  modalMode.value = 'create'
+  selectedTask.value = undefined
+  isModalOpen.value = true
+}
+
+const openEditModal = (task: Task) => {
+  modalMode.value = 'edit'
+  selectedTask.value = task
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  selectedTask.value = undefined
 }
 </script>
 
@@ -537,6 +571,16 @@ const getStatusText = (status: string) => {
           padding: 1rem;
           border-bottom: 1px solid #e0e0e0;
           color: #2c3e50;
+        }
+        
+        .task-title {
+          cursor: pointer;
+          color: #42b883;
+          font-weight: 500;
+          
+          &:hover {
+            text-decoration: underline;
+          }
         }
       }
     }
