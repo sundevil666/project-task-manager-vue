@@ -4,6 +4,7 @@ import { api } from '../services/api'
 import type { ITask as ApiTask, CreateTaskRequest } from '../services/api'
 import { createPersistence, LS_KEYS, localStorageHelper } from '../utils/localStorage'
 import { useToast } from 'vue-toastification'
+import { mockTasks } from '../mocks/tasks'
 
 // Enhanced Task interface matching requirements
 export interface Task extends Omit<ApiTask, 'status'> {
@@ -68,6 +69,21 @@ export const useTaskStore = defineStore('tasks', () => {
 
   // Initialize on store creation
   initializeFromStorage()
+
+  // Seed demo data on first visit
+  const seedData = () => {
+    const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_DATA)
+    if (!hasSeeded && tasks.value.length === 0) {
+      const seededTasks = mockTasks.map(task => ({
+        ...task,
+        status: mapApiStatusToTaskStatus(task.status),
+        order: task.order || 0
+      }))
+      tasks.value = seededTasks
+      saveToStorage()
+    }
+  }
+  seedData()
 
   // Getters
   const getTasksByProjectId = computed(() => {

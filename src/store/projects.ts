@@ -2,8 +2,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api, type IProject, type CreateProjectRequest } from '../services/api'
 import { useAppStore } from './index'
-import { createPersistence, LS_KEYS } from '../utils/localStorage'
+import { createPersistence, LS_KEYS, localStorageHelper } from '../utils/localStorage'
 import { useToast } from 'vue-toastification'
+import { mockProjects } from '../mocks/projects'
 
 export const useProjectsStore = defineStore('projects', () => {
   const toast = useToast()
@@ -26,6 +27,17 @@ export const useProjectsStore = defineStore('projects', () => {
 
   // Initialize on store creation
   initializeFromStorage()
+
+  // Seed demo data on first visit
+  const seedData = () => {
+    const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_DATA)
+    if (!hasSeeded && projects.value.length === 0) {
+      projects.value = [...mockProjects]
+      saveToStorage()
+      localStorageHelper.set(LS_KEYS.HAS_SEEDED_DATA, true)
+    }
+  }
+  seedData()
 
   // Getters
   const getAllProjects = computed(() => projects.value)

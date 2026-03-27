@@ -58,7 +58,8 @@ export const LS_KEYS = {
   PROJECTS: 'projects',
   TASKS: 'tasks',
   VIEW_MODE: 'view_mode',
-  TABLE_SETTINGS: 'table_settings'
+  TABLE_SETTINGS: 'table_settings',
+  HAS_SEEDED_DATA: 'has_seeded_data'
 } as const
 
 /**
