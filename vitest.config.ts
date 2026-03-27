@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+// @ts-ignore
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
