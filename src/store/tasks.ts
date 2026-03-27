@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { api } from '../services/api'
 import type { ITask as ApiTask, CreateTaskRequest } from '../services/api'
 import { createPersistence, LS_KEYS, localStorageHelper } from '../utils/localStorage'
+import { useToast } from 'vue-toastification'
 
 // Enhanced Task interface matching requirements
 export interface Task extends Omit<ApiTask, 'status'> {
@@ -41,6 +42,8 @@ export interface KanbanColumn {
 }
 
 export const useTaskStore = defineStore('tasks', () => {
+  const toast = useToast()
+  
   // State
   const tasks = ref<Task[]>([])
   const loading = ref(false)
@@ -251,9 +254,11 @@ export const useTaskStore = defineStore('tasks', () => {
       
       tasks.value.push(newTask)
       saveToStorage()
+      toast.success('Задача успешно добавлена')
       return newTask
     } catch (error) {
       console.error('Failed to add task:', error)
+      toast.error('Ошибка при добавлении задачи')
       throw error
     } finally {
       loading.value = false
@@ -281,11 +286,13 @@ export const useTaskStore = defineStore('tasks', () => {
           }
           saveToStorage()
         }
+        toast.success('Задача обновлена')
         return tasks.value[index]
       }
       return null
     } catch (error) {
       console.error('Failed to update task:', error)
+      toast.error('Ошибка при обновлении задачи')
       throw error
     } finally {
       loading.value = false
@@ -301,9 +308,11 @@ export const useTaskStore = defineStore('tasks', () => {
         tasks.value.splice(index, 1)
         saveToStorage()
       }
+      toast.success('Задача удалена')
       return true
     } catch (error) {
       console.error('Failed to delete task:', error)
+      toast.error('Ошибка при удалении задачи')
       throw error
     } finally {
       loading.value = false
@@ -328,9 +337,11 @@ export const useTaskStore = defineStore('tasks', () => {
       tasks.value = tasks.value.filter(task => task.projectId !== projectId)
       saveToStorage()
       
+      toast.success('Все задачи проекта удалены')
       return true
     } catch (error) {
       console.error('Failed to delete project tasks:', error)
+      toast.error('Ошибка при удалении задач проекта')
       throw error
     } finally {
       loading.value = false

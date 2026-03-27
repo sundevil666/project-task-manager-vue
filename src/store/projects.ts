@@ -3,8 +3,11 @@ import { ref, computed } from 'vue'
 import { api, type IProject, type CreateProjectRequest } from '../services/api'
 import { useAppStore } from './index'
 import { createPersistence, LS_KEYS } from '../utils/localStorage'
+import { useToast } from 'vue-toastification'
 
 export const useProjectsStore = defineStore('projects', () => {
+  const toast = useToast()
+  
   // State
   const projects = ref<IProject[]>([])
 
@@ -61,9 +64,11 @@ export const useProjectsStore = defineStore('projects', () => {
       const response = await api.createProject(projectData)
       projects.value.push(response.data)
       saveToStorage()
+      toast.success('Проект успешно добавлен')
       return response.data
     } catch (error) {
       console.error('Error creating project:', error)
+      toast.error('Ошибка при создании проекта')
       throw error
     } finally {
       appStore.setLoading(false)
@@ -80,9 +85,11 @@ export const useProjectsStore = defineStore('projects', () => {
         projects.value.splice(index, 1)
         saveToStorage()
       }
+      toast.success('Проект успешно удален')
       return true
     } catch (error) {
       console.error('Error deleting project:', error)
+      toast.error('Ошибка при удалении проекта')
       throw error
     } finally {
       appStore.setLoading(false)
