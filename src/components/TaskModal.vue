@@ -51,7 +51,7 @@
         </div>
         
         <div class="form-group">
-          <label for="dueDate">Термін виконання</label>
+          <label for="dueDate">Термін виконання *</label>
           <input
             id="dueDate"
             v-model="formData.dueDate"
@@ -71,6 +71,15 @@
             :disabled="isLoading"
           >
             Скасувати
+          </button>
+          <button
+            v-if="isEditMode"
+            type="button"
+            @click="handleDelete"
+            class="btn btn-danger"
+            :disabled="isLoading"
+          >
+            Видалити
           </button>
           <button
             type="submit"
@@ -147,15 +156,14 @@ const validateField = (field: string) => {
       break
       
     case 'dueDate':
-      if (formData.value.dueDate) {
+      if (!formData.value.dueDate) {
+        errors.value.dueDate = 'Термін виконання обов\'язковий'
+      } else {
         const selectedDate = new Date(formData.value.dueDate)
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         
-        const isNewTask = !isEditMode.value
-        const dateWasChanged = formData.value.dueDate !== originalDueDate.value
-        
-        if ((isNewTask || dateWasChanged) && selectedDate < today) {
+        if (selectedDate < today) {
           errors.value.dueDate = 'Дата не може бути меншою за поточну'
         }
       }
@@ -234,6 +242,24 @@ const handleSubmit = async () => {
 
 const closeModal = () => {
   emit('close')
+}
+
+const handleDelete = async () => {
+  if (!isEditMode.value || !props.task) return
+  
+  const confirmed = confirm('Ви впевнені, що хочете видалити цю задачу?')
+  if (!confirmed) return
+  
+  isLoading.value = true
+  
+  try {
+    await taskStore.deleteTask(props.task.id)
+    closeModal()
+  } catch (error) {
+    console.log(error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 watch(() => props.isOpen, (isOpen) => {
@@ -417,6 +443,15 @@ watch(() => props.task, () => {
   
   &:hover:not(:disabled) {
     background: #369870;
+  }
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background: #dc2626;
   }
 }
 

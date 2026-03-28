@@ -400,18 +400,28 @@ export const useTaskStore = defineStore('tasks', () => {
     saveTableSettings()
   }
 
-  const saveTableSettings = (columnWidths?: TableSettings['columnWidths']) => {
+  const tableSettings = ref<TableSettings>({
+    sort: { column: 'status', direction: 'asc' },
+    filters: {},
+    columnWidths: {
+      id: 80,
+      title: 300,
+      assignee: 150,
+      status: 120,
+      dueDate: 150
+    }
+  })
+
+  const saveTableSettings = (newColumnWidths?: TableSettings['columnWidths']) => {
     try {
+      if (newColumnWidths) {
+        tableSettings.value.columnWidths = newColumnWidths
+      }
+      
       const settings: TableSettings = {
         sort: sort.value,
         filters: filters.value,
-        columnWidths: columnWidths || {
-          id: 80,
-          title: 300,
-          assignee: 150,
-          status: 120,
-          dueDate: 150
-        }
+        columnWidths: tableSettings.value.columnWidths
       }
       localStorageHelper.set(LS_KEYS.TASKS_TABLE_SETTINGS, settings)
     } catch (error) {
@@ -425,6 +435,11 @@ export const useTaskStore = defineStore('tasks', () => {
       if (settings) {
         sort.value = settings.sort || { column: 'status', direction: 'asc' }
         filters.value = settings.filters || {}
+        tableSettings.value = {
+          sort: sort.value,
+          filters: filters.value,
+          columnWidths: settings.columnWidths || tableSettings.value.columnWidths
+        }
         return settings.columnWidths
       }
     } catch (error) {
@@ -441,6 +456,7 @@ export const useTaskStore = defineStore('tasks', () => {
     loading,
     filters,
     sort,
+    tableSettings,
     getTasksByProjectId,
     filteredTasks,
     getFilteredAndSortedTasks,

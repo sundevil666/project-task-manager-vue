@@ -17,8 +17,17 @@
       class="tasks-list"
     >
       <template #item="{ element: task }">
-        <div class="task-card" :data-id="task.id" @click="openEditModal(task)">
-          <div class="task-title">{{ task.title }}</div>
+        <div class="task-card" :data-id="task.id">
+          <div class="task-header">
+            <div class="task-title" @click="openEditModal(task)">{{ task.title }}</div>
+            <button 
+              @click.stop="handleDelete(task.id)" 
+              class="delete-task-btn"
+              title="Видалити задачу"
+            >
+              🗑️
+            </button>
+          </div>
           <div class="task-meta">
             <div v-if="task.assignee" class="task-assignee">
               <span class="assignee-icon">👤</span>
@@ -55,6 +64,7 @@ interface Props {
   onTaskMove: (taskId: number, newStatus: Task['status'], newOrder: number) => void
   onTaskReorder: (taskId: number, newOrder: number) => void
   onEditTask: (task: Task) => void
+  onDeleteTask?: (taskId: number) => void
 }
 
 const props = defineProps<Props>()
@@ -82,6 +92,12 @@ const handleDragEnd = (event: any) => {
 
 const openEditModal = (task: Task) => {
   props.onEditTask(task)
+}
+
+const handleDelete = (taskId: number) => {
+  if (props.onDeleteTask) {
+    props.onDeleteTask(taskId)
+  }
 }
 
 const formatDate = (dateString: string) => {
@@ -169,9 +185,37 @@ const formatDate = (dateString: string) => {
 .task-title {
   font-weight: 500;
   color: #2c3e50;
-  margin-bottom: 0.5rem;
   font-size: 0.875rem;
   line-height: 1.3;
+  flex: 1;
+  cursor: pointer;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.delete-task-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.125rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  
+  &:hover {
+    background-color: #fee2e2;
+  }
 }
 
 .task-meta {

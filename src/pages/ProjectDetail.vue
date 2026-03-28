@@ -79,6 +79,7 @@
                   @click="handleSort('id')"
                   class="sortable-header id-header"
                   :style="{ width: columnWidths.id + 'px' }"
+                  data-column="id"
                 >
                   ID завдання
                   <span class="sort-indicator" v-if="sort.column === 'id'">
@@ -90,6 +91,7 @@
                   @click="handleSort('title')" 
                   class="sortable-header"
                   :style="{ width: columnWidths.title + 'px' }"
+                  data-column="title"
                 >
                   Назва
                   <span class="sort-indicator" v-if="sort.column === 'title'">
@@ -101,6 +103,7 @@
                   @click="handleSort('assignee')" 
                   class="sortable-header"
                   :style="{ width: columnWidths.assignee + 'px' }"
+                  data-column="assignee"
                 >
                   Виконавець
                   <span class="sort-indicator" v-if="sort.column === 'assignee'">
@@ -112,6 +115,7 @@
                   @click="handleSort('status')" 
                   class="sortable-header"
                   :style="{ width: columnWidths.status + 'px' }"
+                  data-column="status"
                 >
                   Статус
                   <span class="sort-indicator" v-if="sort.column === 'status'">
@@ -123,6 +127,7 @@
                   @click="handleSort('dueDate')" 
                   class="sortable-header"
                   :style="{ width: columnWidths.dueDate + 'px' }"
+                  data-column="dueDate"
                 >
                   Термін виконання
                   <span class="sort-indicator" v-if="sort.column === 'dueDate'">
@@ -130,10 +135,11 @@
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 'dueDate')"></div>
                 </th>
+                <th class="actions-header" :style="{ width: '80px' }">Дії</th>
               </tr>
               <tr v-if="sort.column === 'order'" class="manual-sort-indicator">
                 <td class="manual-sort-notice"></td>
-                <td :colspan="4" class="manual-sort-notice">
+                <td :colspan="5" class="manual-sort-notice">
                   🔀 Ручне сортування (перетягніть задачі для зміни порядку)
                 </td>
               </tr>
@@ -159,6 +165,15 @@
                     </span>
                   </td>
                   <td :style="{ width: columnWidths.dueDate + 'px' }">{{ task.dueDate || '-' }}</td>
+                  <td class="actions-cell" :style="{ width: '80px' }">
+                    <button 
+                      @click.stop="deleteTask(task.id)" 
+                      class="delete-task-btn"
+                      title="Видалити задачу"
+                    >
+                      🗑️
+                    </button>
+                  </td>
                 </tr>
               </template>
             </draggable>
@@ -174,6 +189,7 @@
               :on-task-move="handleTaskMove"
               :on-task-reorder="handleTaskReorder"
               :on-edit-task="openEditModal"
+              :on-delete-task="deleteTask"
             />
             <KanbanColumn
               title="В роботі"
@@ -182,6 +198,7 @@
               :on-task-move="handleTaskMove"
               :on-task-reorder="handleTaskReorder"
               :on-edit-task="openEditModal"
+              :on-delete-task="deleteTask"
             />
             <KanbanColumn
               title="Завершено"
@@ -190,6 +207,7 @@
               :on-task-move="handleTaskMove"
               :on-task-reorder="handleTaskReorder"
               :on-edit-task="openEditModal"
+              :on-delete-task="deleteTask"
             />
           </div>
         </div>
@@ -218,6 +236,17 @@
         <div class="modal-actions">
           <button @click="cancelDeleteProject" class="cancel-btn">Скасувати</button>
           <button @click="deleteProject" class="confirm-delete-btn">Видалити</button>
+        </div>
+      </div>
+    </div>
+    
+    <div v-if="showTaskDeleteConfirm" class="modal-overlay">
+      <div class="confirm-modal">
+        <h3>Видалити задачу?</h3>
+        <p>Ви впевнені, що хочете видалити цю задачу?</p>
+        <div class="modal-actions">
+          <button @click="cancelDeleteTask" class="cancel-btn">Скасувати</button>
+          <button @click="confirmDeleteTask" class="confirm-delete-btn">Видалити</button>
         </div>
       </div>
     </div>
@@ -258,11 +287,8 @@ const saveViewMode = () => {
 onMounted(async () => {
   initializeViewMode()
   
-  // Load table settings (sort, filters, column widths) from LocalStorage
-  const savedWidths = taskStore.loadTableSettings()
-  if (savedWidths) {
-    columnWidths.value = savedWidths
-  }
+  // Load table settings (sort, filters, column widths) from LocalStorage via store
+  taskStore.loadTableSettings()
   
   // Sync local filter refs with loaded store values
   const loadedFilters = taskStore.filters
@@ -284,6 +310,8 @@ const modalMode = ref<'create' | 'edit'>('create')
 const selectedTask = ref<Task | undefined>()
 
 const showDeleteConfirm = ref(false)
+const showTaskDeleteConfirm = ref(false)
+const taskToDelete = ref<number | null>(null)
 
 const handleTableReorder = async (event: any) => {
   const { oldIndex, newIndex } = event
@@ -314,16 +342,15 @@ const handleTableReorder = async (event: any) => {
   }
 }
 
-const columnWidths = ref<TableSettings['columnWidths']>({
-  id: 80,
-  title: 300,
-  assignee: 150,
-  status: 120,
-  dueDate: 150
+const columnWidths = computed({
+  get: () => taskStore.tableSettings.columnWidths,
+  set: (value) => {
+    taskStore.saveTableSettings(value)
+  }
 })
 
 const resizing = ref(false)
-const resizingColumn = ref<keyof typeof columnWidths.value | null>(null)
+const resizingColumn = ref<keyof typeof taskStore.tableSettings.columnWidths | null>(null)
 const startX = ref(0)
 const startWidth = ref(0)
 
@@ -387,6 +414,7 @@ const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value)
   resizingColumn.value = column
   startX.value = event.clientX
   startWidth.value = columnWidths.value[column]
+  currentResizeWidth.value = startWidth.value
   
   document.addEventListener('mousemove', handleResize)
   document.addEventListener('mouseup', stopResize)
@@ -397,12 +425,27 @@ const handleResize = (event: MouseEvent) => {
   
   const diff = event.clientX - startX.value
   const newWidth = Math.max(80, startWidth.value + diff)
-  columnWidths.value[resizingColumn.value] = newWidth
+  
+  // Применяем ширину напрямую к DOM для производительности
+  const th = document.querySelector(`th[data-column="${resizingColumn.value}"]`)
+  if (th) {
+    (th as HTMLElement).style.width = newWidth + 'px'
+  }
+  
+  // Обновляем текущую ширину для сохранения
+  currentResizeWidth.value = newWidth
 }
+
+const currentResizeWidth = ref(0)
 
 const stopResize = () => {
   if (resizing.value && resizingColumn.value) {
-    taskStore.saveTableSettings(columnWidths.value)
+    // Создаем новый объект с обновленной шириной
+    const newWidths = {
+      ...columnWidths.value,
+      [resizingColumn.value]: currentResizeWidth.value
+    }
+    taskStore.saveTableSettings(newWidths)
   }
   
   resizing.value = false
@@ -451,6 +494,29 @@ const openEditModal = (task: Task) => {
 const closeModal = () => {
   isModalOpen.value = false
   selectedTask.value = undefined
+}
+
+const deleteTask = (taskId: number) => {
+  taskToDelete.value = taskId
+  showTaskDeleteConfirm.value = true
+}
+
+const confirmDeleteTask = async () => {
+  if (!taskToDelete.value) return
+  
+  try {
+    await taskStore.deleteTask(taskToDelete.value)
+  } catch (error) {
+    console.log(error)
+  } finally {
+    taskToDelete.value = null
+    showTaskDeleteConfirm.value = false
+  }
+}
+
+const cancelDeleteTask = () => {
+  taskToDelete.value = null
+  showTaskDeleteConfirm.value = false
 }
 
 const confirmDeleteProject = () => {
@@ -925,6 +991,24 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
       &.status-done {
         background: #d4edda;
         color: #155724;
+      }
+    }
+    
+    .actions-cell {
+      text-align: center;
+    }
+    
+    .delete-task-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: #fee2e2;
       }
     }
   }
