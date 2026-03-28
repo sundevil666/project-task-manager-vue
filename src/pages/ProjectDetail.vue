@@ -258,16 +258,19 @@ const saveViewMode = () => {
 onMounted(async () => {
   initializeViewMode()
   
+  // Load table settings (sort, filters, column widths) from LocalStorage
   const savedWidths = taskStore.loadTableSettings()
   if (savedWidths) {
     columnWidths.value = savedWidths
   }
   
-  if (taskStore.filters?.status) {
-    statusFilter.value = taskStore.filters.status
+  // Sync local filter refs with loaded store values
+  const loadedFilters = taskStore.filters
+  if (loadedFilters.status) {
+    statusFilter.value = loadedFilters.status
   }
-  if (taskStore.filters?.assignee !== undefined) {
-    assigneeFilter.value = taskStore.filters.assignee
+  if (loadedFilters.assignee !== undefined) {
+    assigneeFilter.value = loadedFilters.assignee
   }
   
   await projectsStore.fetchProjects()
