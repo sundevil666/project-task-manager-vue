@@ -312,6 +312,7 @@ const handleTableReorder = async (event: any) => {
 }
 
 const columnWidths = ref<TableSettings['columnWidths']>({
+  id: 80,
   title: 300,
   assignee: 150,
   status: 120,

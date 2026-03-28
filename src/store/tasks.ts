@@ -434,6 +434,7 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   watch(filters, () => saveTableSettings(), { deep: true })
+  watch(sort, () => saveTableSettings(), { deep: true })
 
   return {
     tasks,
