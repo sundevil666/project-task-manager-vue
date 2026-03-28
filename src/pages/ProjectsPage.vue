@@ -88,6 +88,7 @@
               :key="project.id"
               :project="project"
               :widths="columnWidths"
+              @edit="openEditModal"
             />
           </tbody>
         </table>
@@ -99,6 +100,7 @@
 
     <AddProjectModal
       :is-open="isModalOpen"
+      :project="editingProject"
       @close="closeModal"
     />
   </div>
@@ -142,6 +144,7 @@ const { getAllProjects: projects } = storeToRefs(projectsStore)
 const { isLoading } = storeToRefs(appStore)
 
 const isModalOpen = ref(false)
+const editingProject = ref<IProject | null>(null)
 
 const sortColumn = ref<SortColumn>('id')
 const sortDirection = ref<SortDirection>('asc')
@@ -154,7 +157,7 @@ const columnWidths = ref({
   taskCount: 120,
   status: 120,
   createdAt: 120,
-  actions: 80
+  actions: 100
 })
 
 const resizing = ref(false)
@@ -281,11 +284,18 @@ const filteredAndSortedProjects = computed(() => {
 })
 
 const openModal = () => {
+  editingProject.value = null
+  isModalOpen.value = true
+}
+
+const openEditModal = (project: IProject) => {
+  editingProject.value = project
   isModalOpen.value = true
 }
 
 const closeModal = () => {
   isModalOpen.value = false
+  editingProject.value = null
 }
 </script>
 

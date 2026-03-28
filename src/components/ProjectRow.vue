@@ -10,7 +10,8 @@
     </td>
     <td class="project-row__cell" :style="{ width: widths.createdAt + 'px' }">{{ formattedDate }}</td>
     <td class="project-row__cell" :style="{ width: widths.actions + 'px' }">
-      <button @click="confirmDelete" class="delete-btn">🗑️</button>
+      <button @click="startEdit" class="action-btn edit-btn" title="Редагувати">✏️</button>
+      <button @click="confirmDelete" class="action-btn delete-btn" title="Видалити">🗑️</button>
     </td>
   </tr>
   
@@ -45,6 +46,10 @@ const props = defineProps<{
   }
 }>()
 
+const emit = defineEmits<{
+  edit: [project: IProject]
+}>()
+
 const projectsStore = useProjectsStore()
 const taskStore = useTaskStore()
 
@@ -58,6 +63,10 @@ const formattedDate = computed(() => {
     year: 'numeric'
   }).replace(/\//g, '.')
 })
+
+const startEdit = () => {
+  emit('edit', props.project)
+}
 
 const confirmDelete = () => {
   showConfirm.value = true
@@ -104,7 +113,7 @@ const deleteProject = async () => {
     }
   }
   
-  .delete-btn {
+  .action-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -112,8 +121,17 @@ const deleteProject = async () => {
     padding: 0.25rem;
     border-radius: 0.25rem;
     transition: background-color 0.2s;
+    margin-right: 0.5rem;
+    
+    &:last-child {
+      margin-right: 0;
+    }
     
     &:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    &.delete-btn:hover {
       background-color: rgba(239, 68, 68, 0.1);
     }
   }

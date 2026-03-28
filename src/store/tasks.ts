@@ -418,8 +418,8 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       const settings = localStorageHelper.get<TableSettings>(LS_KEYS.TABLE_SETTINGS)
       if (settings) {
-        sort.value = settings.sort
-        filters.value = settings.filters
+        sort.value = settings.sort || { column: 'status', direction: 'asc' }
+        filters.value = settings.filters || {}
         return settings.columnWidths
       }
     } catch (error) {

@@ -2,7 +2,7 @@
   <div v-if="isOpen" class="modal-overlay" @click="closeModal">
     <div class="modal" @click.stop>
       <div class="modal__header">
-        <h2 class="modal__title">Додати проєкт</h2>
+        <h2 class="modal__title">{{ isEditMode ? 'Редагувати проєкт' : 'Додати проєкт' }}</h2>
         <button class="modal__close" @click="closeModal">&times;</button>
       </div>
       
@@ -30,6 +30,20 @@
             rows="4"
           />
         </div>
+
+        <div class="form-group">
+          <label for="project-status" class="form-label">Статус</label>
+          <select
+            id="project-status"
+            v-model="formData.status"
+            class="form-select"
+          >
+            <option value="Planning">Planning</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+        </div>
         
         <div class="modal__actions">
           <button type="button" class="btn btn--secondary" @click="closeModal">
@@ -42,7 +56,7 @@
             :disabled="isSubmitting"
           >
             <span v-if="isSubmitting">Збереження...</span>
-            <span v-else>Зберегти</span>
+            <span v-else>{{ isEditMode ? 'Оновити' : 'Зберегти' }}</span>
           </button>
         </div>
       </form>
@@ -51,11 +65,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import { useProjectsStore } from '../store/projects'
+import type { IProject } from '../mocks/projects'
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean
+  project?: IProject | null
 }>()
 
 const emit = defineEmits<{
@@ -64,9 +80,12 @@ const emit = defineEmits<{
 
 const projectsStore = useProjectsStore()
 
+const isEditMode = computed(() => !!props.project)
+
 const formData = reactive({
   name: '',
-  description: ''
+  description: '',
+  status: 'Planning' as IProject['status']
 })
 
 const errors = reactive({
@@ -74,6 +93,31 @@ const errors = reactive({
 })
 
 const isSubmitting = ref(false)
+
+const initForm = () => {
+  if (props.project) {
+    formData.name = props.project.name
+    formData.description = props.project.description
+    formData.status = props.project.status
+  } else {
+    formData.name = ''
+    formData.description = ''
+    formData.status = 'Planning'
+  }
+  errors.name = ''
+}
+
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen) {
+    initForm()
+  }
+})
+
+watch(() => props.project, () => {
+  if (props.isOpen) {
+    initForm()
+  }
+}, { immediate: true })
 
 const validateForm = (): boolean => {
   errors.name = ''
@@ -94,6 +138,7 @@ const closeModal = () => {
 const resetForm = () => {
   formData.name = ''
   formData.description = ''
+  formData.status = 'Planning'
   errors.name = ''
 }
 
@@ -105,10 +150,19 @@ const saveProject = async () => {
   isSubmitting.value = true
   
   try {
-    await projectsStore.addProject({
-      name: formData.name.trim(),
-      description: formData.description.trim()
-    })
+    if (isEditMode.value && props.project) {
+      await projectsStore.updateProject(props.project.id, {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        status: formData.status
+      })
+    } else {
+      await projectsStore.addProject({
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        status: formData.status
+      })
+    }
     
     closeModal()
   } catch (error) {
@@ -195,7 +249,8 @@ const saveProject = async () => {
 }
 
 .form-input,
-.form-textarea {
+.form-textarea,
+.form-select {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
@@ -221,6 +276,11 @@ const saveProject = async () => {
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
   }
+}
+
+.form-select {
+  background-color: white;
+  cursor: pointer;
 }
 
 .form-textarea {

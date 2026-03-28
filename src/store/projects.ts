@@ -88,12 +88,33 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
+  const updateProject = async (projectId: number, projectData: Partial<CreateProjectRequest>) => {
+    const appStore = useAppStore()
+    appStore.setLoading(true)
+    try {
+      const response = await api.updateProject(projectId, projectData)
+      if (response.data) {
+        const index = projects.value.findIndex(project => project.id === projectId)
+        if (index > -1) {
+          projects.value[index] = response.data
+          saveToStorage()
+        }
+        toast.success('Проект оновлено')
+        return response.data
+      }
+      return null
+    } finally {
+      appStore.setLoading(false)
+    }
+  }
+
   return {
     projects,
     getAllProjects,
     getProjectById,
     fetchProjects,
     addProject,
+    updateProject,
     deleteProject,
     initializeFromStorage,
     saveToStorage

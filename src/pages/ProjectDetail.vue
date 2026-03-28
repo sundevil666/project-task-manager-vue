@@ -245,10 +245,10 @@ onMounted(async () => {
     columnWidths.value = savedWidths
   }
   
-  if (taskStore.filters.status) {
+  if (taskStore.filters?.status) {
     statusFilter.value = taskStore.filters.status
   }
-  if (taskStore.filters.assignee) {
+  if (taskStore.filters?.assignee) {
     assigneeFilter.value = taskStore.filters.assignee
   }
   
