@@ -163,8 +163,11 @@ const validateField = (field: string): void => {
         const selectedDate = new Date(formData.value.dueDate)
         const today = new Date()
         today.setHours(0, 0, 0, 0)
-        
-        if (selectedDate < today) {
+
+        const isPastDate = selectedDate < today
+        const isUnchangedHistoricalDateInEditMode = isEditMode.value && formData.value.dueDate === originalDueDate.value
+
+        if (isPastDate && !isUnchangedHistoricalDateInEditMode) {
           errors.value.dueDate = 'Дата не може бути меншою за поточну'
         }
       }
