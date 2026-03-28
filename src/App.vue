@@ -16,7 +16,7 @@
 
 <style scoped>
 .app {
-  max-width: 1280px;
+  max-width: 1680px;
   margin: 0 auto;
   padding: 2rem;
   text-align: left;

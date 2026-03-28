@@ -1,15 +1,15 @@
 <template>
   <tr class="project-row" @click="goToProject">
-    <td class="project-row__cell" :style="{ width: widths.id + 'px' }">{{ project.id }}</td>
-    <td class="project-row__cell" :style="{ width: widths.name + 'px' }">{{ project.name }}</td>
-    <td class="project-row__cell" :style="{ width: widths.taskCount + 'px' }">{{ project.taskCount }}</td>
-    <td class="project-row__cell" :style="{ width: widths.status + 'px' }">
+    <td class="project-row__cell" data-column="id">{{ project.id }}</td>
+    <td class="project-row__cell" data-column="name">{{ project.name }}</td>
+    <td class="project-row__cell" data-column="taskCount">{{ project.taskCount }}</td>
+    <td class="project-row__cell" data-column="status">
       <span class="status-badge" :class="`status--${project.status.toLowerCase().replace(' ', '-')}`">
         {{ project.status }}
       </span>
     </td>
-    <td class="project-row__cell" :style="{ width: widths.createdAt + 'px' }">{{ formattedDate }}</td>
-    <td class="project-row__cell" :style="{ width: widths.actions + 'px' }">
+    <td class="project-row__cell" data-column="createdAt">{{ formattedDate }}</td>
+    <td class="project-row__cell" data-column="actions">
       <button @click="startEdit" class="action-btn edit-btn" title="Редагувати">✏️</button>
       <button @click="confirmDelete" class="action-btn delete-btn" title="Видалити">🗑️</button>
     </td>
@@ -40,14 +40,6 @@ import { handleError } from '../utils/errorHandler'
 
 const props = defineProps<{
   project: IProject
-  widths: {
-    id: number
-    name: number
-    taskCount: number
-    status: number
-    createdAt: number
-    actions: number
-  }
 }>()
 
 const emit = defineEmits<{
@@ -113,6 +105,10 @@ const deleteProject = async (): Promise<void> => {
     padding: 1rem;
     border-bottom: 1px solid #e5e7eb;
     color: #1f2937;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    will-change: width;
     
     &:nth-child(2) {
       color: #42b883;

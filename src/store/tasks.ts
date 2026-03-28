@@ -411,11 +411,11 @@ export const useTaskStore = defineStore('tasks', () => {
     sort: { column: 'status', direction: 'asc' },
     filters: {},
     columnWidths: {
-      id: 80,
-      title: 300,
-      assignee: 150,
-      status: 120,
-      dueDate: 150
+      id: 60,
+      title: 200,
+      assignee: 120,
+      status: 100,
+      dueDate: 120
     }
   })
 

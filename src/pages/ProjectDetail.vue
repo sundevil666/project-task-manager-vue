@@ -156,16 +156,16 @@
             >
               <template #item="{ element: task }">
                 <tr :key="task.id" class="draggable-row">
-                  <td :style="{ width: columnWidths.id + 'px' }" class="task-id">{{ task.id }}</td>
-                  <td :style="{ width: columnWidths.title + 'px' }" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
-                  <td :style="{ width: columnWidths.assignee + 'px' }">{{ getUserNameById(task.assignee) || '-' }}</td>
-                  <td :style="{ width: columnWidths.status + 'px' }">
+                  <td data-column="id" class="task-id">{{ task.id }}</td>
+                  <td data-column="title" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
+                  <td data-column="assignee">{{ getUserNameById(task.assignee) || '-' }}</td>
+                  <td data-column="status">
                     <span :class="['status-badge', `status-${task.status}`]">
                       {{ getStatusText(task.status) }}
                     </span>
                   </td>
-                  <td :style="{ width: columnWidths.dueDate + 'px' }">{{ task.dueDate || '-' }}</td>
-                  <td class="actions-cell" :style="{ width: '80px' }">
+                  <td data-column="dueDate">{{ task.dueDate || '-' }}</td>
+                  <td class="actions-cell">
                     <button 
                       @click.stop="deleteTask(task.id)" 
                       class="delete-task-btn"
@@ -284,6 +284,15 @@ const saveViewMode = (): void => {
   localStorageHelper.set(LS_KEYS.VIEW_MODE, viewMode.value)
 }
 
+watch(viewMode, (newMode) => {
+  if (newMode === 'table') {
+    // Apply widths after table renders - applyColumnWidths called via watch after columnWidths defined
+    setTimeout(() => {
+      // will be defined later
+    }, 0)
+  }
+})
+
 onMounted(async () => {
   initializeViewMode()
   
@@ -301,6 +310,9 @@ onMounted(async () => {
   
   await projectsStore.fetchProjects()
   await taskStore.fetchTasks(projectId.value)
+  
+  // Apply saved column widths after table renders
+  setTimeout(applyColumnWidths, 100)
 })
 
 watch(viewMode, saveViewMode)
@@ -354,10 +366,35 @@ const columnWidths = computed({
   }
 })
 
+const applyColumnWidths = (): void => {
+  const widths = columnWidths.value
+  Object.keys(widths).forEach((column) => {
+    const w = widths[column as keyof typeof widths]
+    const cells = document.querySelectorAll(`th[data-column="${column}"], td[data-column="${column}"]`)
+    cells.forEach((cell) => {
+      ;(cell as HTMLElement).style.minWidth = w + 'px'
+      ;(cell as HTMLElement).style.width = w + 'px'
+    })
+  })
+}
+
+watch(viewMode, (newMode) => {
+  if (newMode === 'table') {
+    setTimeout(applyColumnWidths, 0)
+  }
+})
+
+watch(columnWidths, () => {
+  if (viewMode.value === 'table') {
+    applyColumnWidths()
+  }
+}, { deep: true })
+
 const resizing = ref(false)
 const resizingColumn = ref<keyof typeof taskStore.tableSettings.columnWidths | null>(null)
 const startX = ref(0)
 const startWidth = ref(0)
+let currentResizeWidth = 0
 
 const setMode = (mode: 'table' | 'kanban'): void => {
   viewMode.value = mode
@@ -415,11 +452,12 @@ const clearFilters = (): void => {
 
 const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value): void => {
   event.preventDefault()
+  event.stopPropagation()
   resizing.value = true
   resizingColumn.value = column
   startX.value = event.clientX
   startWidth.value = columnWidths.value[column]
-  currentResizeWidth.value = startWidth.value
+  currentResizeWidth = startWidth.value
   
   document.addEventListener('mousemove', handleResize)
   document.addEventListener('mouseup', stopResize)
@@ -427,28 +465,26 @@ const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value)
 
 const handleResize = (event: MouseEvent): void => {
   if (!resizing.value || !resizingColumn.value) return
-  
-  const diff = event.clientX - startX.value
-  const newWidth = Math.max(80, startWidth.value + diff)
-  
-  // Применяем ширину напрямую к DOM для производительности
-  const th = document.querySelector(`th[data-column="${resizingColumn.value}"]`)
-  if (th) {
-    (th as HTMLElement).style.width = newWidth + 'px'
-  }
-  
-  // Обновляем текущую ширину для сохранения
-  currentResizeWidth.value = newWidth
-}
 
-const currentResizeWidth = ref(0)
+  const diff = event.clientX - startX.value
+  const newWidth = Math.max(50, startWidth.value + diff)
+
+  const column = resizingColumn.value
+  const cells = document.querySelectorAll(`th[data-column="${column}"], td[data-column="${column}"]`)
+  cells.forEach((cell) => {
+    ;(cell as HTMLElement).style.minWidth = newWidth + 'px'
+    ;(cell as HTMLElement).style.width = newWidth + 'px'
+  })
+
+  currentResizeWidth = newWidth
+}
 
 const stopResize = (): void => {
   if (resizing.value && resizingColumn.value) {
     // Создаем новый объект с обновленной шириной
     const newWidths = {
       ...columnWidths.value,
-      [resizingColumn.value]: currentResizeWidth.value
+      [resizingColumn.value]: currentResizeWidth
     }
     taskStore.saveTableSettings(newWidths)
   }
@@ -823,7 +859,8 @@ const handleTaskReorder = async (taskId: number, newOrder: number): Promise<void
 }
 
 .table-view {
-  overflow: auto;
+  width: 100%;
+  
   .loading-state,
   .empty-state {
     text-align: center;
@@ -891,10 +928,11 @@ const handleTaskReorder = async (taskId: number, newOrder: number): Promise<void
       right: 0;
       top: 0;
       bottom: 0;
-      width: 5px;
+      width: 10px;
       cursor: col-resize;
       background: transparent;
       transition: background-color 0.2s;
+      z-index: 1;
       
       &:hover {
         background-color: rgba(66, 184, 131, 0.3);
@@ -915,6 +953,10 @@ const handleTaskReorder = async (taskId: number, newOrder: number): Promise<void
           padding: 1rem;
           border-bottom: 1px solid #e0e0e0;
           color: #2c3e50;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          will-change: width;
         }
         
         .task-title {

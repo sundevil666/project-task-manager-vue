@@ -84,7 +84,7 @@
           <button
             type="submit"
             class="btn btn-primary"
-            :disabled="hasErrors || isLoading"
+            :disabled="isLoading"
           >
             <span v-if="isLoading" class="loading-spinner"></span>
             {{ isLoading ? 'Збереження...' : 'Зберегти' }}

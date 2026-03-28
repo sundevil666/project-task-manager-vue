@@ -37,8 +37,8 @@
               <th
                 class="sortable-header"
                 :class="{ 'sort-asc': sortColumn === 'id' && sortDirection === 'asc', 'sort-desc': sortColumn === 'id' && sortDirection === 'desc' }"
-                :style="{ width: columnWidths.id + 'px' }"
                 @click="toggleSort('id')"
+                data-column="id"
               >
                 ID проєкту
                 <span class="sort-icon">↕</span>
@@ -47,8 +47,8 @@
               <th
                 class="sortable-header"
                 :class="{ 'sort-asc': sortColumn === 'name' && sortDirection === 'asc', 'sort-desc': sortColumn === 'name' && sortDirection === 'desc' }"
-                :style="{ width: columnWidths.name + 'px' }"
                 @click="toggleSort('name')"
+                data-column="name"
               >
                 Назва проєкту
                 <span class="sort-icon">↕</span>
@@ -57,8 +57,8 @@
               <th
                 class="sortable-header"
                 :class="{ 'sort-asc': sortColumn === 'taskCount' && sortDirection === 'asc', 'sort-desc': sortColumn === 'taskCount' && sortDirection === 'desc' }"
-                :style="{ width: columnWidths.taskCount + 'px' }"
                 @click="toggleSort('taskCount')"
+                data-column="taskCount"
               >
                 Кількість задач
                 <span class="sort-icon">↕</span>
@@ -67,17 +67,17 @@
               <th
                 class="sortable-header"
                 :class="{ 'sort-asc': sortColumn === 'status' && sortDirection === 'asc', 'sort-desc': sortColumn === 'status' && sortDirection === 'desc' }"
-                :style="{ width: columnWidths.status + 'px' }"
                 @click="toggleSort('status')"
+                data-column="status"
               >
                 Статус
                 <span class="sort-icon">↕</span>
                 <div class="resize-handle" @mousedown="startResize($event, 'status')"></div>
               </th>
-              <th :style="{ width: columnWidths.createdAt + 'px' }">Дата створення
+              <th data-column="createdAt">Дата створення
                 <div class="resize-handle" @mousedown="startResize($event, 'createdAt')"></div>
               </th>
-              <th :style="{ width: columnWidths.actions + 'px' }">Дії
+              <th data-column="actions">Дії
                 <div class="resize-handle" @mousedown="startResize($event, 'actions')"></div>
               </th>
             </tr>
@@ -87,7 +87,6 @@
               v-for="project in filteredAndSortedProjects"
               :key="project.id"
               :project="project"
-              :widths="columnWidths"
               @edit="openEditModal"
             />
           </tbody>
@@ -151,27 +150,76 @@ const sortDirection = ref<SortDirection>('asc')
 const filterName = ref('')
 const filterStatus = ref('')
 
-const columnWidths = ref({
-  id: 80,
-  name: 250,
-  taskCount: 120,
-  status: 120,
-  createdAt: 120,
-  actions: 100
-})
+const DEFAULT_COLUMN_WIDTHS = {
+  id: 60,
+  name: 200,
+  taskCount: 100,
+  status: 100,
+  createdAt: 100,
+  actions: 80
+} as const
+
+type ColumnWidthKey = keyof typeof DEFAULT_COLUMN_WIDTHS
+
+const MIN_COLUMN_WIDTH = 50
+const MAX_COLUMN_WIDTHS: Record<ColumnWidthKey, number> = {
+  id: 120,
+  name: 500,
+  taskCount: 220,
+  status: 220,
+  createdAt: 220,
+  actions: 140
+}
+
+const clampColumnWidth = (column: ColumnWidthKey, width: number): number => {
+  const maxWidth = MAX_COLUMN_WIDTHS[column]
+  return Math.min(Math.max(width, MIN_COLUMN_WIDTH), maxWidth)
+}
+
+const normalizeColumnWidths = (
+  widths: Partial<Record<ColumnWidthKey, number>> = {}
+): Record<ColumnWidthKey, number> => {
+  const normalized = { ...DEFAULT_COLUMN_WIDTHS } as Record<ColumnWidthKey, number>
+
+  Object.keys(DEFAULT_COLUMN_WIDTHS).forEach((column) => {
+    const key = column as ColumnWidthKey
+    const value = widths[key]
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      normalized[key] = clampColumnWidth(key, value)
+    }
+  })
+
+  return normalized
+}
+
+const columnWidths = ref<Record<ColumnWidthKey, number>>(normalizeColumnWidths())
+
+const applyColumnWidths = (): void => {
+  const widths = columnWidths.value
+  Object.keys(widths).forEach((column) => {
+    const w = widths[column as keyof typeof widths]
+    const cells = document.querySelectorAll(`th[data-column="${column}"], td[data-column="${column}"]`)
+    cells.forEach((cell) => {
+      ;(cell as HTMLElement).style.width = w + 'px'
+    })
+  })
+}
 
 const resizing = ref(false)
-const resizingColumn = ref<keyof typeof columnWidths.value | null>(null)
+const resizingColumn = ref<ColumnWidthKey | null>(null)
 const startX = ref(0)
 const startWidth = ref(0)
+const currentResizeWidth = ref(0)
 
-const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value): void => {
+const startResize = (event: MouseEvent, column: ColumnWidthKey): void => {
   event.preventDefault()
   event.stopPropagation()
   resizing.value = true
   resizingColumn.value = column
   startX.value = event.clientX
   startWidth.value = columnWidths.value[column]
+  currentResizeWidth.value = startWidth.value
 
   document.addEventListener('mousemove', handleResize)
   document.addEventListener('mouseup', stopResize)
@@ -181,12 +229,20 @@ const handleResize = (event: MouseEvent): void => {
   if (!resizing.value || !resizingColumn.value) return
 
   const diff = event.clientX - startX.value
-  const newWidth = Math.max(60, startWidth.value + diff)
-  columnWidths.value[resizingColumn.value] = newWidth
+  const newWidth = clampColumnWidth(resizingColumn.value, startWidth.value + diff)
+
+  const column = resizingColumn.value
+  const cells = document.querySelectorAll(`th[data-column="${column}"], td[data-column="${column}"]`)
+  cells.forEach((cell) => {
+    ;(cell as HTMLElement).style.width = newWidth + 'px'
+  })
+
+  currentResizeWidth.value = newWidth
 }
 
 const stopResize = (): void => {
   if (resizing.value && resizingColumn.value) {
+    columnWidths.value[resizingColumn.value] = currentResizeWidth.value
     saveTableSettings()
   }
 
@@ -203,9 +259,7 @@ const loadTableSettings = (): void => {
     sortDirection.value = settings.sortDirection ?? 'asc'
     filterName.value = settings.filterName ?? ''
     filterStatus.value = settings.filterStatus ?? ''
-    if (settings.columnWidths) {
-      columnWidths.value = { ...columnWidths.value, ...settings.columnWidths }
-    }
+    columnWidths.value = normalizeColumnWidths(settings.columnWidths)
   }
 }
 
@@ -228,6 +282,8 @@ onMounted(async () => {
     projectsStore.fetchProjects(),
     taskStore.fetchTasks()
   ])
+  // Apply saved column widths after table renders
+  setTimeout(applyColumnWidths, 100)
 })
 
 const toggleSort = (column: SortColumn): void => {
@@ -398,12 +454,13 @@ const closeModal = (): void => {
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   background-color: #ffffff;
+  width: 100%;
 }
 
 .projects-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  table-layout: fixed;
 
   th {
     background-color: #f9fafb;
@@ -413,12 +470,18 @@ const closeModal = (): void => {
     border-bottom: 2px solid #e5e7eb;
     color: #1f2937;
     position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   td {
     padding: 1rem;
     border-bottom: 1px solid #e5e7eb;
     color: #1f2937;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   tbody tr {
@@ -474,10 +537,11 @@ const closeModal = (): void => {
   right: 0;
   top: 0;
   bottom: 0;
-  width: 5px;
+  width: 10px;
   cursor: col-resize;
   background: transparent;
   transition: background-color 0.2s;
+  z-index: 1;
 
   &:hover {
     background-color: #3b82f6;
