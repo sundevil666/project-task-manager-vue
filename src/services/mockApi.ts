@@ -42,7 +42,7 @@ export interface CreateTaskRequest {
   title: string
   description: string
   priority: ITask['priority']
-  assignee?: string
+  assignee?: number
   dueDate?: string
 }
 

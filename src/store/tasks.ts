@@ -5,6 +5,7 @@ import type { ITask as ApiTask, CreateTaskRequest } from '../services/api'
 import { createPersistence, LS_KEYS, localStorageHelper } from '../utils/localStorage'
 import { useToast } from 'vue-toastification'
 import { mockTasks } from '../mocks/tasks'
+import { getUserNameById } from '../mocks/users'
 
 export interface Task extends Omit<ApiTask, 'status'> {
   status: 'todo' | 'in-progress' | 'done'
@@ -13,7 +14,7 @@ export interface Task extends Omit<ApiTask, 'status'> {
 
 export interface TaskFilters {
   status?: Task['status']
-  assignee?: string
+  assignee?: number | null | 'all'
 }
 
 export interface TaskSort {
@@ -110,7 +111,7 @@ export const useTaskStore = defineStore('tasks', () => {
       filtered = filtered.filter(task => task.status === filters.value.status)
     }
 
-    if (filters.value.assignee) {
+    if (filters.value.assignee !== undefined && filters.value.assignee !== 'all') {
       filtered = filtered.filter(task => task.assignee === filters.value.assignee)
     }
 
@@ -125,10 +126,8 @@ export const useTaskStore = defineStore('tasks', () => {
         filtered = filtered.filter(task => task.status === filters.value.status)
       }
 
-      if (filters.value.assignee) {
-        filtered = filtered.filter(task => 
-          task.assignee?.toLowerCase().includes(filters.value.assignee!.toLowerCase())
-        )
+      if (filters.value.assignee !== undefined && filters.value.assignee !== 'all') {
+        filtered = filtered.filter(task => task.assignee === filters.value.assignee)
       }
 
       filtered.sort((a, b) => {
@@ -159,8 +158,8 @@ export const useTaskStore = defineStore('tasks', () => {
             bValue = b.title.toLowerCase()
             break
           case 'assignee':
-            aValue = a.assignee?.toLowerCase() || ''
-            bValue = b.assignee?.toLowerCase() || ''
+            aValue = getUserNameById(a.assignee).toLowerCase()
+            bValue = getUserNameById(b.assignee).toLowerCase()
             break
           default:
             return a.order - b.order

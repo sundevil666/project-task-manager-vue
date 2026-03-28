@@ -29,14 +29,18 @@
       
       <div class="filters-section">
         <div class="filter-group">
-          <label for="assignee-filter">Виконавець:</label>
-          <input 
+          <label for="assignee-filter">Фільтр за виконавцем</label>
+          <select
             id="assignee-filter"
-            v-model="assigneeFilter" 
-            type="text" 
-            placeholder="Фільтр за виконавцем"
-            class="filter-input"
-          />
+            v-model="assigneeFilter"
+            class="filter-select"
+          >
+            <option value="all">Усі</option>
+            <option :value="null">Не призначено</option>
+            <option v-for="user in users" :key="user.id" :value="user.id">
+              {{ user.name }}
+            </option>
+          </select>
         </div>
         <div class="filter-group">
           <label for="status-filter">Статус:</label>
@@ -148,7 +152,7 @@
                 <tr :key="task.id" class="draggable-row">
                   <td :style="{ width: columnWidths.id + 'px' }" class="task-id">{{ task.id }}</td>
                   <td :style="{ width: columnWidths.title + 'px' }" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
-                  <td :style="{ width: columnWidths.assignee + 'px' }">{{ task.assignee || '-' }}</td>
+                  <td :style="{ width: columnWidths.assignee + 'px' }">{{ getUserNameById(task.assignee) || '-' }}</td>
                   <td :style="{ width: columnWidths.status + 'px' }">
                     <span :class="['status-badge', `status-${task.status}`]">
                       {{ getStatusText(task.status) }}
@@ -231,6 +235,7 @@ import type { Task } from '../store/tasks'
 import { localStorageHelper, LS_KEYS } from '../utils/localStorage'
 import type { TableSettings } from '../store/tasks'
 import draggable from 'vuedraggable'
+import { getUserNameById, mockUsers } from '../mocks/users'
 
 const router = useRouter()
 const route = useRoute()
@@ -261,7 +266,7 @@ onMounted(async () => {
   if (taskStore.filters?.status) {
     statusFilter.value = taskStore.filters.status
   }
-  if (taskStore.filters?.assignee) {
+  if (taskStore.filters?.assignee !== undefined) {
     assigneeFilter.value = taskStore.filters.assignee
   }
   
@@ -333,28 +338,18 @@ const isLoading = computed(() => taskStore.loading)
 const sort = computed(() => taskStore.sort)
 
 const todoTasks = computed(() => {
-  if (statusFilter.value && statusFilter.value !== 'todo') return []
-  
-  return projectTasks.value
-    .filter((task: Task) => task.status === 'todo')
-    .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
+  return displayTasks.value.filter((task: Task) => task.status === 'todo')
 })
 const inProgressTasks = computed(() => {
-  if (statusFilter.value && statusFilter.value !== 'in-progress') return []
-  
-  return projectTasks.value
-    .filter((task: Task) => task.status === 'in-progress')
-    .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
+  return displayTasks.value.filter((task: Task) => task.status === 'in-progress')
 })
 const doneTasks = computed(() => {
-  if (statusFilter.value && statusFilter.value !== 'done') return []
-  
-  return projectTasks.value
-    .filter((task: Task) => task.status === 'done')
-    .filter((task: Task) => !assigneeFilter.value || task.assignee?.toLowerCase().includes(assigneeFilter.value.toLowerCase()))
+  return displayTasks.value.filter((task: Task) => task.status === 'done')
 })
 
-const assigneeFilter = ref('')
+const users = mockUsers
+
+const assigneeFilter = ref<number | null | 'all'>('all')
 const statusFilter = ref('')
 
 const displayTasks = computed(() => {
@@ -362,12 +357,12 @@ const displayTasks = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return assigneeFilter.value.trim() !== '' || statusFilter.value !== ''
+  return assigneeFilter.value !== 'all' || statusFilter.value !== ''
 })
 
 watch([assigneeFilter, statusFilter], ([newAssignee, newStatus]) => {
   taskStore.setFilters({
-    assignee: newAssignee.trim() || undefined,
+    assignee: newAssignee,
     status: newStatus as any || undefined
   })
 })
@@ -377,7 +372,7 @@ const handleSort = (column: 'status' | 'dueDate' | 'title' | 'assignee') => {
 }
 
 const clearFilters = () => {
-  assigneeFilter.value = ''
+  assigneeFilter.value = 'all'
   statusFilter.value = ''
   taskStore.clearFilters()
 }

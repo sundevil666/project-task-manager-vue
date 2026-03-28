@@ -5,7 +5,7 @@ export interface ITask {
   description: string
   status: 'Pending' | 'In Progress' | 'Completed' | 'Blocked'
   priority: 'Low' | 'Medium' | 'High' | 'Critical'
-  assignee?: string
+  assignee?: number
   dueDate?: string
   createdDate: string
   order: number
@@ -19,7 +19,7 @@ export const mockTasks: ITask[] = [
     description: 'Create initial design concepts and wireframes',
     status: 'Completed',
     priority: 'High',
-    assignee: 'John Doe',
+    assignee: 1,
     dueDate: '2024-02-01',
     createdDate: '2024-01-16',
     order: 0
@@ -31,7 +31,7 @@ export const mockTasks: ITask[] = [
     description: 'Implement responsive design with Vue.js',
     status: 'In Progress',
     priority: 'High',
-    assignee: 'Jane Smith',
+    assignee: 2,
     dueDate: '2024-02-15',
     createdDate: '2024-01-17',
     order: 1
@@ -43,7 +43,7 @@ export const mockTasks: ITask[] = [
     description: 'Migrate existing content to new design',
     status: 'Pending',
     priority: 'Medium',
-    assignee: 'Mike Johnson',
+    assignee: 3,
     dueDate: '2024-02-20',
     createdDate: '2024-01-18',
     order: 2
@@ -66,7 +66,7 @@ export const mockTasks: ITask[] = [
     description: 'Define app requirements and user stories',
     status: 'In Progress',
     priority: 'High',
-    assignee: 'Sarah Wilson',
+    assignee: 4,
     dueDate: '2024-02-10',
     createdDate: '2024-02-02',
     order: 4
@@ -78,7 +78,7 @@ export const mockTasks: ITask[] = [
     description: 'Design app interface and user experience',
     status: 'Pending',
     priority: 'High',
-    assignee: 'Tom Brown',
+    assignee: 5,
     dueDate: '2024-02-20',
     createdDate: '2024-02-03',
     order: 5
@@ -90,7 +90,7 @@ export const mockTasks: ITask[] = [
     description: 'Create RESTful API for mobile app',
     status: 'Pending',
     priority: 'High',
-    assignee: 'Alex Davis',
+    assignee: 6,
     dueDate: '2024-03-01',
     createdDate: '2024-02-04',
     order: 6
@@ -102,7 +102,7 @@ export const mockTasks: ITask[] = [
     description: 'Research available payment processing APIs',
     status: 'Completed',
     priority: 'Medium',
-    assignee: 'Chris Lee',
+    assignee: 7,
     dueDate: '2024-01-20',
     createdDate: '2024-01-11',
     order: 7
@@ -114,7 +114,7 @@ export const mockTasks: ITask[] = [
     description: 'Set up API connections and authentication',
     status: 'Completed',
     priority: 'High',
-    assignee: 'Pat Kim',
+    assignee: 8,
     dueDate: '2024-01-25',
     createdDate: '2024-01-12',
     order: 8
@@ -126,7 +126,7 @@ export const mockTasks: ITask[] = [
     description: 'Test API integration and validate transactions',
     status: 'Completed',
     priority: 'High',
-    assignee: 'Sam Taylor',
+    assignee: 9,
     dueDate: '2024-01-30',
     createdDate: '2024-01-13',
     order: 9
@@ -138,7 +138,7 @@ export const mockTasks: ITask[] = [
     description: 'Design new database schema for cloud solution',
     status: 'Completed',
     priority: 'High',
-    assignee: 'Jordan Martinez',
+    assignee: 10,
     dueDate: '2024-02-20',
     createdDate: '2024-02-16',
     order: 10
@@ -150,7 +150,7 @@ export const mockTasks: ITask[] = [
     description: 'Create scripts to migrate existing data',
     status: 'Blocked',
     priority: 'High',
-    assignee: 'Casey Robinson',
+    assignee: 11,
     dueDate: '2024-02-25',
     createdDate: '2024-02-17',
     order: 11
@@ -162,7 +162,7 @@ export const mockTasks: ITask[] = [
     description: 'Conduct comprehensive security vulnerability assessment',
     status: 'Pending',
     priority: 'Critical',
-    assignee: 'Morgan Bailey',
+    assignee: 12,
     dueDate: '2024-03-10',
     createdDate: '2024-03-02',
     order: 12
@@ -174,7 +174,7 @@ export const mockTasks: ITask[] = [
     description: 'Implement recommended security measures',
     status: 'Pending',
     priority: 'High',
-    assignee: 'Morgan Bailey',
+    assignee: 12,
     dueDate: '2024-03-20',
     createdDate: '2024-03-03',
     order: 13

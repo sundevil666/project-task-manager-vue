@@ -22,7 +22,7 @@
           <div class="task-meta">
             <div v-if="task.assignee" class="task-assignee">
               <span class="assignee-icon">👤</span>
-              {{ task.assignee }}
+              {{ getAssigneeName(task.assignee) }}
             </div>
             <div v-if="task.dueDate" class="task-due-date">
               <span class="date-icon">📅</span>
@@ -42,6 +42,11 @@
 <script setup lang="ts">
 import draggable from 'vuedraggable'
 import type { Task } from '../store/tasks'
+import { getUserNameById } from '../mocks/users'
+
+const getAssigneeName = (assigneeId: number | undefined): string => {
+  return getUserNameById(assigneeId) || 'Не призначено'
+}
 
 interface Props {
   title: string

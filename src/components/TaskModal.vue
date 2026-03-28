@@ -22,13 +22,16 @@
         
         <div class="form-group">
           <label for="assignee">Виконавець</label>
-          <input
+          <select
             id="assignee"
             v-model="formData.assignee"
-            type="text"
-            class="form-input"
-            placeholder="Введіть ім'я виконавця"
-          />
+            class="form-select"
+          >
+            <option value="">Не призначено</option>
+            <option v-for="user in users" :key="user.id" :value="user.id">
+              {{ user.name }}
+            </option>
+          </select>
         </div>
         
         <div class="form-group">
@@ -88,6 +91,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useTaskStore } from '../store/tasks'
 import type { Task } from '../store/tasks'
+import { mockUsers } from '../mocks/users'
 
 interface Props {
   isOpen: boolean
@@ -105,11 +109,13 @@ const emit = defineEmits<Emits>()
 
 const taskStore = useTaskStore()
 
+const users = mockUsers
+
 const isEditMode = computed(() => props.mode === 'edit')
 
 const formData = ref({
   title: '',
-  assignee: '',
+  assignee: '' as string | number,
   status: 'todo' as Task['status'],
   dueDate: ''
 })
@@ -199,14 +205,14 @@ const handleSubmit = async () => {
     if (isEditMode.value && props.task) {
       await taskStore.updateTask(props.task.id, {
         title: formData.value.title.trim(),
-        assignee: formData.value.assignee.trim() || undefined,
+        assignee: formData.value.assignee ? Number(formData.value.assignee) : undefined,
         status: formData.value.status
       })
     } else {
       await taskStore.addTask({
         projectId: props.projectId,
         title: formData.value.title.trim(),
-        assignee: formData.value.assignee.trim() || undefined,
+        assignee: formData.value.assignee ? Number(formData.value.assignee) : undefined,
         status: formData.value.status,
         dueDate: formData.value.dueDate || undefined,
         description: '',
