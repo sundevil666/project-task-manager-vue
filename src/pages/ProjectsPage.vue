@@ -197,7 +197,7 @@ const stopResize = () => {
 }
 
 const loadTableSettings = () => {
-  const settings = localStorageHelper.get<TableSettings>(LS_KEYS.TABLE_SETTINGS)
+  const settings = localStorageHelper.get<TableSettings>(LS_KEYS.PROJECTS_TABLE_SETTINGS)
   if (settings) {
     sortColumn.value = settings.sortColumn ?? 'id'
     sortDirection.value = settings.sortDirection ?? 'asc'
@@ -217,7 +217,7 @@ const saveTableSettings = () => {
     filterStatus: filterStatus.value,
     columnWidths: columnWidths.value
   }
-  localStorageHelper.set(LS_KEYS.TABLE_SETTINGS, settings)
+  localStorageHelper.set(LS_KEYS.PROJECTS_TABLE_SETTINGS, settings)
 }
 
 watch([sortColumn, sortDirection, filterName, filterStatus, columnWidths], saveTableSettings, { deep: true })

@@ -413,7 +413,7 @@ export const useTaskStore = defineStore('tasks', () => {
           dueDate: 150
         }
       }
-      localStorageHelper.set(LS_KEYS.TABLE_SETTINGS, settings)
+      localStorageHelper.set(LS_KEYS.TASKS_TABLE_SETTINGS, settings)
     } catch (error) {
       console.log(error)
     }
@@ -421,7 +421,7 @@ export const useTaskStore = defineStore('tasks', () => {
 
   const loadTableSettings = () => {
     try {
-      const settings = localStorageHelper.get<TableSettings>(LS_KEYS.TABLE_SETTINGS)
+      const settings = localStorageHelper.get<TableSettings>(LS_KEYS.TASKS_TABLE_SETTINGS)
       if (settings) {
         sort.value = settings.sort || { column: 'status', direction: 'asc' }
         filters.value = settings.filters || {}
