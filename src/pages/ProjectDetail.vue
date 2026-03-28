@@ -284,15 +284,6 @@ const saveViewMode = (): void => {
   localStorageHelper.set(LS_KEYS.VIEW_MODE, viewMode.value)
 }
 
-watch(viewMode, (newMode) => {
-  if (newMode === 'table') {
-    // Apply widths after table renders - applyColumnWidths called via watch after columnWidths defined
-    setTimeout(() => {
-      // will be defined later
-    }, 0)
-  }
-})
-
 onMounted(async () => {
   initializeViewMode()
   
@@ -330,32 +321,67 @@ interface TableReorderEvent {
   newIndex: number
 }
 
+const clampIndex = (value: number, min: number, max: number): number => {
+  return Math.min(Math.max(value, min), max)
+}
+
+const reorderByVisiblePosition = (
+  fullList: Task[],
+  visibleList: Task[],
+  taskId: number,
+  targetVisibleIndex: number
+): Task[] => {
+  const movedTask = fullList.find(task => task.id === taskId)
+  if (!movedTask) return fullList
+
+  const visibleWithoutMoved = visibleList.filter(task => task.id !== taskId)
+  const safeVisibleIndex = clampIndex(targetVisibleIndex, 0, visibleWithoutMoved.length)
+  const prevVisibleTask = visibleWithoutMoved[safeVisibleIndex - 1]
+  const nextVisibleTask = visibleWithoutMoved[safeVisibleIndex]
+
+  const fullWithoutMoved = fullList.filter(task => task.id !== taskId)
+  let insertIndex = clampIndex(safeVisibleIndex, 0, fullWithoutMoved.length)
+
+  if (prevVisibleTask) {
+    const prevIndex = fullWithoutMoved.findIndex(task => task.id === prevVisibleTask.id)
+    if (prevIndex !== -1) {
+      insertIndex = prevIndex + 1
+    }
+  } else if (nextVisibleTask) {
+    const nextIndex = fullWithoutMoved.findIndex(task => task.id === nextVisibleTask.id)
+    if (nextIndex !== -1) {
+      insertIndex = nextIndex
+    }
+  }
+
+  fullWithoutMoved.splice(insertIndex, 0, movedTask)
+  return fullWithoutMoved
+}
+
 const handleTableReorder = async (event: TableReorderEvent): Promise<void> => {
   const { oldIndex, newIndex } = event
   
   if (oldIndex !== newIndex) {
-    const currentTasks = [...displayTasks.value]
-    const draggedTask = currentTasks[oldIndex]
-    
-    const reorderedTasks = [...currentTasks]
-    reorderedTasks.splice(oldIndex, 1)
-    reorderedTasks.splice(newIndex, 0, draggedTask)
-    
+    const visibleTasks = [...displayTasks.value]
+    const draggedTask = visibleTasks[oldIndex]
+    if (!draggedTask) return
+
     const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
-    const otherProjectTasks = allProjectTasks.filter(task => 
-      !reorderedTasks.some(updated => updated.id === task.id)
+    const reorderedProjectTasks = reorderByVisiblePosition(
+      allProjectTasks,
+      visibleTasks,
+      draggedTask.id,
+      newIndex
     )
-    
-    const updatedTasks = reorderedTasks.map((task, index) => ({
+
+    const updatedTasks = reorderedProjectTasks.map((task, index) => ({
       ...task,
       order: index
     }))
-    
-    const finalTasks = [...otherProjectTasks, ...updatedTasks]
-    
+
     taskStore.setSort({ column: 'order', direction: 'asc' })
-    
-    await taskStore.reorderTasks(finalTasks)
+
+    await taskStore.reorderTasks(updatedTasks)
   }
 }
 
@@ -589,18 +615,15 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     }
     
     const reorderedTasks: Task[] = []
-    
-    const insertTaskAtPosition = (tasks: Task[], insertOrder: number): Task[] => {
-      const movedTask = tasks.find(t => t.id === taskId)
-      if (!movedTask) return tasks
-      
-      const newTasks = tasks.filter(t => t.id !== taskId)
-      newTasks.splice(insertOrder, 0, movedTask)
-      return newTasks
-    }
-    
+
     const targetTasks = statusGroups[newStatus]
-    const reorderedTargetTasks = insertTaskAtPosition(targetTasks, newOrder)
+    const visibleTargetTasks = displayTasks.value.filter(task => task.status === newStatus)
+    const reorderedTargetTasks = reorderByVisiblePosition(
+      targetTasks,
+      visibleTargetTasks,
+      taskId,
+      newOrder
+    )
     
     const allStatuses: Task['status'][] = ['todo', 'in-progress', 'done']
     allStatuses.forEach(status => {
@@ -642,19 +665,18 @@ const handleTaskReorder = async (taskId: number, newOrder: number): Promise<void
     if (!taskStatus) return
     
     const statusTasks = statusGroups[taskStatus]
-    const movedTask = statusTasks.find(t => t.id === taskId)
-    if (!movedTask) return
-    
-    const newTasks = [...statusTasks]
-    const currentIndex = newTasks.findIndex(t => t.id === taskId)
-    
-    newTasks.splice(currentIndex, 1)
-    newTasks.splice(newOrder, 0, movedTask)
+    const visibleStatusTasks = displayTasks.value.filter(task => task.status === taskStatus)
+    const reorderedStatusTasks = reorderByVisiblePosition(
+      statusTasks,
+      visibleStatusTasks,
+      taskId,
+      newOrder
+    )
     
     const allStatuses: Task['status'][] = ['todo', 'in-progress', 'done']
     allStatuses.forEach(status => {
       const statusTasks = status === taskStatus 
-        ? newTasks
+        ? reorderedStatusTasks
         : statusGroups[status]
       
       statusTasks.forEach((task, index) => {

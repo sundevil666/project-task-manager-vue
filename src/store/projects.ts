@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api, type IProject, type CreateProjectRequest } from '../services/api'
+import { api, type IProject, type ITask, type CreateProjectRequest } from '../services/api'
 import { useAppStore } from './index'
 import { createPersistence, LS_KEYS, localStorageHelper } from '../utils/localStorage'
 import { useToast } from 'vue-toastification'
@@ -38,6 +38,28 @@ export const useProjectsStore = defineStore('projects', () => {
   const getProjectById = computed((): ((id: number) => IProject | undefined) => {
     return (id: number) => projects.value.find(project => project.id === id)
   })
+
+  const recalculateTaskCounts = (tasks: Array<Pick<ITask, 'projectId'>>): void => {
+    const taskCountsByProjectId = tasks.reduce((acc, task) => {
+      acc.set(task.projectId, (acc.get(task.projectId) || 0) + 1)
+      return acc
+    }, new Map<number, number>())
+
+    let hasChanges = false
+    projects.value = projects.value.map((project) => {
+      const nextTaskCount = taskCountsByProjectId.get(project.id) || 0
+      if (project.taskCount === nextTaskCount) {
+        return project
+      }
+
+      hasChanges = true
+      return { ...project, taskCount: nextTaskCount }
+    })
+
+    if (hasChanges) {
+      saveToStorage()
+    }
+  }
 
   const fetchProjects = async (): Promise<void> => {
     const appStore = useAppStore()
@@ -119,6 +141,7 @@ export const useProjectsStore = defineStore('projects', () => {
     addProject,
     updateProject,
     deleteProject,
+    recalculateTaskCounts,
     initializeFromStorage,
     saveToStorage
   }

@@ -7,6 +7,7 @@ import { useToast } from 'vue-toastification'
 import { mockTasks } from '../mocks/tasks'
 import { getUserNameById } from '../mocks/users'
 import {ITask} from "../types";
+import { useProjectsStore } from './projects'
 
 export interface Task extends Omit<ApiTask, 'status'> {
   status: 'todo' | 'in-progress' | 'done'
@@ -96,6 +97,11 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
   seedData()
+
+  const syncProjectTaskCounts = (): void => {
+    const projectsStore = useProjectsStore()
+    projectsStore.recalculateTaskCounts(tasks.value)
+  }
 
   const getTasksByProjectId = computed((): ((projectId: number) => Task[]) => {
     return (projectId: number) => {
@@ -207,6 +213,7 @@ export const useTaskStore = defineStore('tasks', () => {
     
     const hasStoredData = initializeFromStorage()
     if (hasStoredData && projectId === undefined) {
+      syncProjectTaskCounts()
       loading.value = false
       return
     }
@@ -234,6 +241,7 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       
       saveToStorage()
+      syncProjectTaskCounts()
     } catch (error) {
       toast.error('Помилка при завантаженні задач')
       console.error(error)
@@ -272,6 +280,7 @@ export const useTaskStore = defineStore('tasks', () => {
       
       tasks.value.push(newTask)
       saveToStorage()
+      syncProjectTaskCounts()
       toast.success('Задача успешно добавлена')
       return newTask
     } catch (error) {
@@ -302,6 +311,7 @@ export const useTaskStore = defineStore('tasks', () => {
             order: oldTask.order
           }
           saveToStorage()
+          syncProjectTaskCounts()
         }
         toast.success('Задача обновлена')
         return tasks.value[index]
@@ -323,6 +333,7 @@ export const useTaskStore = defineStore('tasks', () => {
       if (index > -1) {
         tasks.value.splice(index, 1)
         saveToStorage()
+        syncProjectTaskCounts()
       }
       toast.success('Задача удалена')
       return true
@@ -350,6 +361,7 @@ export const useTaskStore = defineStore('tasks', () => {
       
       tasks.value = tasks.value.filter(task => task.projectId !== projectId)
       saveToStorage()
+      syncProjectTaskCounts()
       
       toast.success('Все задачи проекта удалены')
       return true
