@@ -57,11 +57,10 @@
             v-model="formData.dueDate"
             type="date"
             :class="['form-input', { 'error': errors.dueDate }]"
-            :disabled="isEditMode"
             @blur="validateField('dueDate')"
+            @change="validateField('dueDate')"
           />
           <span v-if="errors.dueDate" class="error-message">{{ errors.dueDate }}</span>
-          <span v-if="isEditMode" class="field-hint">Дата не змінюється при редагуванні</span>
         </div>
         
         <div class="form-actions">
@@ -125,35 +124,39 @@ const isLoading = ref(false)
 
 const hasErrors = computed(() => Object.keys(errors.value).some(key => errors.value[key]))
 
+const originalDueDate = ref('')
+
 const validateField = (field: string) => {
-  const error = errors.value
-  error[field] = ''
+  delete errors.value[field]
 
   switch (field) {
     case 'title':
       if (!formData.value.title.trim()) {
-        error.title = 'Назва задачі обов\'язкова'
+        errors.value.title = 'Назва задачі обов\'язкова'
       } else if (formData.value.title.trim().length < 3) {
-        error.title = 'Мінімальна довжина - 3 символи'
+        errors.value.title = 'Мінімальна довжина - 3 символи'
       } else if (formData.value.title.trim().length > 120) {
-        error.title = 'Максимальна довжина - 120 символів'
+        errors.value.title = 'Максимальна довжина - 120 символів'
       }
       break
       
     case 'status':
       if (!formData.value.status) {
-        error.status = 'Статус обов\'язковий'
+        errors.value.status = 'Статус обов\'язковий'
       }
       break
       
     case 'dueDate':
-      if (!isEditMode.value && formData.value.dueDate) {
+      if (formData.value.dueDate) {
         const selectedDate = new Date(formData.value.dueDate)
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         
-        if (selectedDate < today) {
-          error.dueDate = 'Дата не може бути меншою за поточну'
+        const isNewTask = !isEditMode.value
+        const dateWasChanged = formData.value.dueDate !== originalDueDate.value
+        
+        if ((isNewTask || dateWasChanged) && selectedDate < today) {
+          errors.value.dueDate = 'Дата не може бути меншою за поточну'
         }
       }
       break
@@ -163,9 +166,7 @@ const validateField = (field: string) => {
 const validateForm = () => {
   validateField('title')
   validateField('status')
-  if (!isEditMode.value) {
-    validateField('dueDate')
-  }
+  validateField('dueDate')
   
   return !hasErrors.value
 }
@@ -189,8 +190,10 @@ const loadTaskData = () => {
       status: props.task.status,
       dueDate: props.task.dueDate || ''
     }
+    originalDueDate.value = props.task.dueDate || ''
   } else {
     resetForm()
+    originalDueDate.value = ''
   }
 }
 
@@ -206,7 +209,8 @@ const handleSubmit = async () => {
       await taskStore.updateTask(props.task.id, {
         title: formData.value.title.trim(),
         assignee: formData.value.assignee ? Number(formData.value.assignee) : undefined,
-        status: formData.value.status
+        status: formData.value.status,
+        dueDate: formData.value.dueDate || undefined
       })
     } else {
       await taskStore.addTask({
