@@ -1,7 +1,7 @@
 <template>
-  <tr class="project-row">
+  <tr class="project-row" @click="goToProject">
     <td class="project-row__cell" :style="{ width: widths.id + 'px' }">{{ project.id }}</td>
-    <td class="project-row__cell" :style="{ width: widths.name + 'px' }"><router-link :to="`/project/${project.id}`">{{ project.name }}</router-link></td>
+    <td class="project-row__cell" :style="{ width: widths.name + 'px' }">{{ project.name }}</td>
     <td class="project-row__cell" :style="{ width: widths.taskCount + 'px' }">{{ project.taskCount }}</td>
     <td class="project-row__cell" :style="{ width: widths.status + 'px' }">
       <span class="status-badge" :class="`status--${project.status.toLowerCase().replace(' ', '-')}`">
@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProjectsStore } from '../store/projects'
 import { useTaskStore } from '../store/tasks'
 import type { IProject } from '../mocks/projects'
@@ -50,6 +51,7 @@ const emit = defineEmits<{
   edit: [project: IProject]
 }>()
 
+const router = useRouter()
 const projectsStore = useProjectsStore()
 const taskStore = useTaskStore()
 
@@ -64,11 +66,17 @@ const formattedDate = computed(() => {
   }).replace(/\//g, '.')
 })
 
-const startEdit = () => {
+const goToProject = () => {
+  router.push(`/project/${props.project.id}`)
+}
+
+const startEdit = (event: MouseEvent) => {
+  event.stopPropagation()
   emit('edit', props.project)
 }
 
-const confirmDelete = () => {
+const confirmDelete = (event: MouseEvent) => {
+  event.stopPropagation()
   showConfirm.value = true
 }
 
@@ -92,6 +100,7 @@ const deleteProject = async () => {
 <style scoped lang="scss">
 .project-row {
   transition: background-color 0.2s ease;
+  cursor: pointer;
 
   &:hover {
     background-color: #f9fafb;
@@ -102,14 +111,9 @@ const deleteProject = async () => {
     border-bottom: 1px solid #e5e7eb;
     color: #1f2937;
     
-    a {
+    &:nth-child(2) {
       color: #42b883;
-      text-decoration: none;
       font-weight: 500;
-      
-      &:hover {
-        text-decoration: underline;
-      }
     }
   }
   
