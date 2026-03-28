@@ -72,7 +72,7 @@ const chartOptions = {
     },
     tooltip: {
       callbacks: {
-        label: (context: { label?: string; parsed: number; dataset: { data: number[] } }) => {
+        label: (context: { label?: string; parsed: number; dataset: { data: number[] } }): string => {
           const label = context.label || ''
           const value = context.parsed || 0
           const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0)

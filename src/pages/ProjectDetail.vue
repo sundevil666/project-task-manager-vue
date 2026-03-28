@@ -273,14 +273,14 @@ const projectsStore = useProjectsStore()
 
 const viewMode = ref<'table' | 'kanban'>('table')
 
-const initializeViewMode = () => {
+const initializeViewMode = (): void => {
   const savedMode = localStorageHelper.get<'table' | 'kanban'>(LS_KEYS.VIEW_MODE)
   if (savedMode) {
     viewMode.value = savedMode
   }
 }
 
-const saveViewMode = () => {
+const saveViewMode = (): void => {
   localStorageHelper.set(LS_KEYS.VIEW_MODE, viewMode.value)
 }
 
@@ -313,7 +313,7 @@ const showDeleteConfirm = ref(false)
 const showTaskDeleteConfirm = ref(false)
 const taskToDelete = ref<number | null>(null)
 
-const handleTableReorder = async (event: { oldIndex: number; newIndex: number }) => {
+const handleTableReorder = async (event: { oldIndex: number; newIndex: number }): Promise<void> => {
   const { oldIndex, newIndex } = event
   
   if (oldIndex !== newIndex) {
@@ -354,7 +354,7 @@ const resizingColumn = ref<keyof typeof taskStore.tableSettings.columnWidths | n
 const startX = ref(0)
 const startWidth = ref(0)
 
-const setMode = (mode: 'table' | 'kanban') => {
+const setMode = (mode: 'table' | 'kanban'): void => {
   viewMode.value = mode
 }
 
@@ -398,17 +398,17 @@ watch([assigneeFilter, statusFilter], ([newAssignee, newStatus]) => {
   })
 })
 
-const handleSort = (column: 'status' | 'dueDate' | 'title' | 'assignee') => {
+const handleSort = (column: 'status' | 'dueDate' | 'title' | 'assignee'): void => {
   taskStore.toggleSort(column)
 }
 
-const clearFilters = () => {
+const clearFilters = (): void => {
   assigneeFilter.value = 'all'
   statusFilter.value = ''
   taskStore.clearFilters()
 }
 
-const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value) => {
+const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value): void => {
   event.preventDefault()
   resizing.value = true
   resizingColumn.value = column
@@ -420,7 +420,7 @@ const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value)
   document.addEventListener('mouseup', stopResize)
 }
 
-const handleResize = (event: MouseEvent) => {
+const handleResize = (event: MouseEvent): void => {
   if (!resizing.value || !resizingColumn.value) return
   
   const diff = event.clientX - startX.value
@@ -438,7 +438,7 @@ const handleResize = (event: MouseEvent) => {
 
 const currentResizeWidth = ref(0)
 
-const stopResize = () => {
+const stopResize = (): void => {
   if (resizing.value && resizingColumn.value) {
     // Создаем новый объект с обновленной шириной
     const newWidths = {
@@ -454,7 +454,7 @@ const stopResize = () => {
   document.removeEventListener('mouseup', stopResize)
 }
 
-const goBack = () => {
+const goBack = (): void => {
   router.push('/')
 }
 
@@ -464,7 +464,7 @@ watch(() => route.params.id, async (newId, oldId) => {
   }
 }, { immediate: false })
 
-const getStatusText = (status: string) => {
+const getStatusText = (status: string): string => {
   switch (status) {
     case 'todo': return 'До виконання'
     case 'in-progress': return 'В роботі'
@@ -473,29 +473,29 @@ const getStatusText = (status: string) => {
   }
 }
 
-const openCreateModal = () => {
+const openCreateModal = (): void => {
   modalMode.value = 'create'
   selectedTask.value = undefined
   isModalOpen.value = true
 }
 
-const openEditModal = (task: Task) => {
+const openEditModal = (task: Task): void => {
   modalMode.value = 'edit'
   selectedTask.value = task
   isModalOpen.value = true
 }
 
-const closeModal = () => {
+const closeModal = (): void => {
   isModalOpen.value = false
   selectedTask.value = undefined
 }
 
-const deleteTask = (taskId: number) => {
+const deleteTask = (taskId: number): void => {
   taskToDelete.value = taskId
   showTaskDeleteConfirm.value = true
 }
 
-const confirmDeleteTask = async () => {
+const confirmDeleteTask = async (): Promise<void> => {
   if (!taskToDelete.value) return
   
   try {
@@ -508,20 +508,20 @@ const confirmDeleteTask = async () => {
   }
 }
 
-const cancelDeleteTask = () => {
+const cancelDeleteTask = (): void => {
   taskToDelete.value = null
   showTaskDeleteConfirm.value = false
 }
 
-const confirmDeleteProject = () => {
+const confirmDeleteProject = (): void => {
   showDeleteConfirm.value = true
 }
 
-const cancelDeleteProject = () => {
+const cancelDeleteProject = (): void => {
   showDeleteConfirm.value = false
 }
 
-const deleteProject = async () => {
+const deleteProject = async (): Promise<void> => {
   if (!project.value) return
   
   try {
@@ -535,7 +535,7 @@ const deleteProject = async () => {
   }
 }
 
-const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number) => {
+const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number): Promise<void> => {
   try {
     await taskStore.updateTask(taskId, { status: newStatus })
     
@@ -551,7 +551,7 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     
     const reorderedTasks: Task[] = []
     
-    const insertTaskAtPosition = (tasks: Task[], insertOrder: number) => {
+    const insertTaskAtPosition = (tasks: Task[], insertOrder: number): Task[] => {
       const movedTask = tasks.find(t => t.id === taskId)
       if (!movedTask) return tasks
       
@@ -580,7 +580,7 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
   }
 }
 
-const handleTaskReorder = async (taskId: number, newOrder: number) => {
+const handleTaskReorder = async (taskId: number, newOrder: number): Promise<void> => {
   try {
     const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
     

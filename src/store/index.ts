@@ -7,15 +7,15 @@ export const useAppStore = defineStore('app', () => {
   
   const hasError = computed(() => error.value !== null)
   
-  const setLoading = (loading: boolean) => {
+  const setLoading = (loading: boolean): void => {
     isLoading.value = loading
   }
   
-  const setError = (errorMessage: string | null) => {
+  const setError = (errorMessage: string | null): void => {
     error.value = errorMessage
   }
   
-  const clearError = () => {
+  const clearError = (): void => {
     error.value = null
   }
   

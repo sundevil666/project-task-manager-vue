@@ -60,7 +60,7 @@ const taskStore = useTaskStore()
 
 const showConfirm = ref(false)
 
-const formattedDate = computed(() => {
+const formattedDate = computed((): string => {
   const date = new Date(props.project.createdDate)
   return date.toLocaleDateString('uk-UA', {
     day: '2-digit',
@@ -69,25 +69,25 @@ const formattedDate = computed(() => {
   }).replace(/\//g, '.')
 })
 
-const goToProject = () => {
+const goToProject = (): void => {
   router.push(`/project/${props.project.id}`)
 }
 
-const startEdit = (event: MouseEvent) => {
+const startEdit = (event: MouseEvent): void => {
   event.stopPropagation()
   emit('edit', props.project)
 }
 
-const confirmDelete = (event: MouseEvent) => {
+const confirmDelete = (event: MouseEvent): void => {
   event.stopPropagation()
   showConfirm.value = true
 }
 
-const cancelDelete = () => {
+const cancelDelete = (): void => {
   showConfirm.value = false
 }
 
-const deleteProject = async () => {
+const deleteProject = async (): Promise<void> => {
   try {
     await taskStore.deleteTasksByProjectId(props.project.id)
     

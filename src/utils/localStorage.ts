@@ -49,8 +49,8 @@ export const createPersistence = <T>(
   key: string,
   getState: () => T,
   setState?: (state: T) => void
-) => {
-  const initialize = () => {
+): { initialize: () => boolean; save: () => void } => {
+  const initialize = (): boolean => {
     const stored = localStorageHelper.get<T>(key)
     if (stored && setState) {
       setState(stored)
@@ -59,7 +59,7 @@ export const createPersistence = <T>(
     return false
   }
 
-  const save = () => {
+  const save = (): void => {
     localStorageHelper.set(key, getState())
   }
 

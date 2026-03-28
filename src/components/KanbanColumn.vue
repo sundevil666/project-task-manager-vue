@@ -69,7 +69,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const handleDragEnd = (event: { item: HTMLElement; from: HTMLElement; to: HTMLElement; oldIndex: number; newIndex: number }) => {
+const handleDragEnd = (event: { item: HTMLElement; from: HTMLElement; to: HTMLElement; oldIndex: number; newIndex: number }): void => {
   const { item, from, to, oldIndex, newIndex } = event
   
   if (oldIndex === newIndex && from === to) {
@@ -90,17 +90,17 @@ const handleDragEnd = (event: { item: HTMLElement; from: HTMLElement; to: HTMLEl
   }
 }
 
-const openEditModal = (task: Task) => {
+const openEditModal = (task: Task): void => {
   props.onEditTask(task)
 }
 
-const handleDelete = (taskId: number) => {
+const handleDelete = (taskId: number): void => {
   if (props.onDeleteTask) {
     props.onDeleteTask(taskId)
   }
 }
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   return date.toLocaleDateString('uk-UA', {
     day: '2-digit',

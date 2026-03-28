@@ -136,7 +136,7 @@ const hasErrors = computed(() => Object.keys(errors.value).some(key => errors.va
 
 const originalDueDate = ref('')
 
-const validateField = (field: string) => {
+const validateField = (field: string): void => {
   delete errors.value[field]
 
   switch (field) {
@@ -172,7 +172,7 @@ const validateField = (field: string) => {
   }
 }
 
-const validateForm = () => {
+const validateForm = (): boolean => {
   validateField('title')
   validateField('status')
   validateField('dueDate')
@@ -180,7 +180,7 @@ const validateForm = () => {
   return !hasErrors.value
 }
 
-const resetForm = () => {
+const resetForm = (): void => {
   const today = new Date().toISOString().split('T')[0]
   formData.value = {
     title: '',
@@ -191,7 +191,7 @@ const resetForm = () => {
   errors.value = {}
 }
 
-const loadTaskData = () => {
+const loadTaskData = (): void => {
   if (isEditMode.value && props.task) {
     formData.value = {
       title: props.task.title,
@@ -206,7 +206,7 @@ const loadTaskData = () => {
   }
 }
 
-const handleSubmit = async () => {
+const handleSubmit = async (): Promise<void> => {
   if (!validateForm()) {
     return
   }
@@ -241,11 +241,11 @@ const handleSubmit = async () => {
   }
 }
 
-const closeModal = () => {
+const closeModal = (): void => {
   emit('close')
 }
 
-const handleDelete = async () => {
+const handleDelete = async (): Promise<void> => {
   if (!isEditMode.value || !props.task) return
   
   const confirmed = confirm('Ви впевнені, що хочете видалити цю задачу?')

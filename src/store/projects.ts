@@ -17,13 +17,13 @@ export const useProjectsStore = defineStore('projects', () => {
     (state) => { projects.value = state }
   )
 
-  const initializeFromStorage = () => persistence.initialize()
+  const initializeFromStorage = (): boolean => persistence.initialize()
 
-  const saveToStorage = () => persistence.save()
+  const saveToStorage = (): void => persistence.save()
 
   initializeFromStorage()
 
-  const seedData = () => {
+  const seedData = (): void => {
     const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_PROJECTS)
     if (!hasSeeded && projects.value.length === 0) {
       projects.value = [...mockProjects]
@@ -35,11 +35,11 @@ export const useProjectsStore = defineStore('projects', () => {
 
   const getAllProjects = computed(() => projects.value)
   
-  const getProjectById = computed(() => {
+  const getProjectById = computed((): ((id: number) => IProject | undefined) => {
     return (id: number) => projects.value.find(project => project.id === id)
   })
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (): Promise<void> => {
     const appStore = useAppStore()
     
     const hasStoredData = initializeFromStorage()
@@ -57,7 +57,7 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
-  const addProject = async (projectData: CreateProjectRequest) => {
+  const addProject = async (projectData: CreateProjectRequest): Promise<IProject> => {
     const appStore = useAppStore()
     appStore.setLoading(true)
     try {
@@ -71,7 +71,7 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
-  const deleteProject = async (projectId: number) => {
+  const deleteProject = async (projectId: number): Promise<boolean> => {
     const appStore = useAppStore()
     appStore.setLoading(true)
     try {
@@ -83,12 +83,15 @@ export const useProjectsStore = defineStore('projects', () => {
       }
       toast.success('Проект успешно удален')
       return true
+    } catch {
+      toast.error('Ошибка при удалении проекта')
+      return false
     } finally {
       appStore.setLoading(false)
     }
   }
 
-  const updateProject = async (projectId: number, projectData: Partial<CreateProjectRequest>) => {
+  const updateProject = async (projectId: number, projectData: Partial<CreateProjectRequest>): Promise<IProject | null> => {
     const appStore = useAppStore()
     appStore.setLoading(true)
     try {

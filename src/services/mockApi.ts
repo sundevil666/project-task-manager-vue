@@ -1,7 +1,7 @@
 import { IProject } from '../mocks/projects'
 import { ITask } from '../mocks/tasks'
 
-const delay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms: number = 500): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
 
 const getProjects = (): IProject[] => {
   const stored = localStorage.getItem('projects')
@@ -13,11 +13,11 @@ const getTasks = (): ITask[] => {
   return stored ? JSON.parse(stored) : []
 }
 
-const saveProjects = (projects: IProject[]) => {
+const saveProjects = (projects: IProject[]): void => {
   localStorage.setItem('projects', JSON.stringify(projects))
 }
 
-const saveTasks = (tasks: ITask[]) => {
+const saveTasks = (tasks: ITask[]): void => {
   localStorage.setItem('tasks', JSON.stringify(tasks))
 }
 

@@ -165,7 +165,7 @@ const resizingColumn = ref<keyof typeof columnWidths.value | null>(null)
 const startX = ref(0)
 const startWidth = ref(0)
 
-const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value) => {
+const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value): void => {
   event.preventDefault()
   event.stopPropagation()
   resizing.value = true
@@ -177,7 +177,7 @@ const startResize = (event: MouseEvent, column: keyof typeof columnWidths.value)
   document.addEventListener('mouseup', stopResize)
 }
 
-const handleResize = (event: MouseEvent) => {
+const handleResize = (event: MouseEvent): void => {
   if (!resizing.value || !resizingColumn.value) return
 
   const diff = event.clientX - startX.value
@@ -185,7 +185,7 @@ const handleResize = (event: MouseEvent) => {
   columnWidths.value[resizingColumn.value] = newWidth
 }
 
-const stopResize = () => {
+const stopResize = (): void => {
   if (resizing.value && resizingColumn.value) {
     saveTableSettings()
   }
@@ -196,7 +196,7 @@ const stopResize = () => {
   document.removeEventListener('mouseup', stopResize)
 }
 
-const loadTableSettings = () => {
+const loadTableSettings = (): void => {
   const settings = localStorageHelper.get<TableSettings>(LS_KEYS.PROJECTS_TABLE_SETTINGS)
   if (settings) {
     sortColumn.value = settings.sortColumn ?? 'id'
@@ -209,7 +209,7 @@ const loadTableSettings = () => {
   }
 }
 
-const saveTableSettings = () => {
+const saveTableSettings = (): void => {
   const settings: TableSettings = {
     sortColumn: sortColumn.value,
     sortDirection: sortDirection.value,
@@ -230,7 +230,7 @@ onMounted(async () => {
   ])
 })
 
-const toggleSort = (column: SortColumn) => {
+const toggleSort = (column: SortColumn): void => {
   if (sortColumn.value === column) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
   } else {
@@ -283,17 +283,17 @@ const filteredAndSortedProjects = computed(() => {
   return result
 })
 
-const openModal = () => {
+const openModal = (): void => {
   editingProject.value = null
   isModalOpen.value = true
 }
 
-const openEditModal = (project: IProject) => {
+const openEditModal = (project: IProject): void => {
   editingProject.value = project
   isModalOpen.value = true
 }
 
-const closeModal = () => {
+const closeModal = (): void => {
   isModalOpen.value = false
   editingProject.value = null
 }

@@ -73,16 +73,16 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const initializeFromStorage = () => {
+  const initializeFromStorage = (): boolean => {
     const result = persistence.initialize()
     return result
   }
 
-  const saveToStorage = () => persistence.save()
+  const saveToStorage = (): void => persistence.save()
 
   initializeFromStorage()
 
-  const seedData = () => {
+  const seedData = (): void => {
     const hasSeeded = localStorageHelper.get<boolean>(LS_KEYS.HAS_SEEDED_TASKS)
     if (!hasSeeded && tasks.value.length === 0) {
       const seededTasks = mockTasks.map(task => ({
@@ -97,7 +97,7 @@ export const useTaskStore = defineStore('tasks', () => {
   }
   seedData()
 
-  const getTasksByProjectId = computed(() => {
+  const getTasksByProjectId = computed((): ((projectId: number) => Task[]) => {
     return (projectId: number) => {
       return tasks.value
         .filter(task => task.projectId === projectId)
@@ -119,7 +119,7 @@ export const useTaskStore = defineStore('tasks', () => {
     return filtered.sort((a, b) => a.order - b.order)
   })
 
-  const getFilteredAndSortedTasks = computed(() => {
+  const getFilteredAndSortedTasks = computed((): ((projectId: number) => Task[]) => {
     return (projectId: number) => {
       let filtered = tasks.value.filter(task => task.projectId === projectId)
 
@@ -202,7 +202,7 @@ export const useTaskStore = defineStore('tasks', () => {
     ]
   })
 
-  const fetchTasks = async (projectId?: number) => {
+  const fetchTasks = async (projectId?: number): Promise<void> => {
     loading.value = true
     
     const hasStoredData = initializeFromStorage()
@@ -243,7 +243,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const addTask = async (taskData: Omit<Task, 'id' | 'createdDate' | 'order'>) => {
+  const addTask = async (taskData: Omit<Task, 'id' | 'createdDate' | 'order'>): Promise<Task> => {
     loading.value = true
     try {
       const maxOrder = Math.max(
@@ -281,7 +281,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const updateTask = async (id: number, updates: Partial<Omit<Task, 'id' | 'createdDate' | 'projectId'>>) => {
+  const updateTask = async (id: number, updates: Partial<Omit<Task, 'id' | 'createdDate' | 'projectId'>>): Promise<Task | null> => {
     loading.value = true
     try {
       const { status, ...restUpdates } = updates
@@ -314,7 +314,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const deleteTask = async (id: number) => {
+  const deleteTask = async (id: number): Promise<boolean> => {
     loading.value = true
     try {
       await api.deleteTask(id)
@@ -333,7 +333,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const deleteTasksByProjectId = async (projectId: number) => {
+  const deleteTasksByProjectId = async (projectId: number): Promise<boolean> => {
     loading.value = true
     try {
       const tasksToDelete = tasks.value.filter(task => task.projectId === projectId)
@@ -354,12 +354,13 @@ export const useTaskStore = defineStore('tasks', () => {
       return true
     } catch {
       toast.error('Ошибка при удалении задач проекта')
+      return false
     } finally {
       loading.value = false
     }
   }
 
-  const reorderTasks = async (reorderedTasks: Task[]) => {
+  const reorderTasks = async (reorderedTasks: Task[]): Promise<boolean> => {
     loading.value = true
     try {
       reorderedTasks.forEach((task) => {
@@ -377,25 +378,26 @@ export const useTaskStore = defineStore('tasks', () => {
     } catch (error) {
       toast.error('Помилка при зміні порядку задач')
       console.error(error)
+      return false
     } finally {
       loading.value = false
     }
   }
 
-  const setFilters = (newFilters: TaskFilters) => {
+  const setFilters = (newFilters: TaskFilters): void => {
     filters.value = { ...newFilters }
   }
 
-  const clearFilters = () => {
+  const clearFilters = (): void => {
     filters.value = {}
   }
 
-  const setSort = (newSort: TaskSort) => {
+  const setSort = (newSort: TaskSort): void => {
     sort.value = { ...newSort }
     saveTableSettings()
   }
 
-  const toggleSort = (column: TaskSort['column']) => {
+  const toggleSort = (column: TaskSort['column']): void => {
     if (sort.value.column === column) {
       sort.value.direction = sort.value.direction === 'asc' ? 'desc' : 'asc'
     } else {
@@ -417,7 +419,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   })
 
-  const saveTableSettings = (newColumnWidths?: TableSettings['columnWidths']) => {
+  const saveTableSettings = (newColumnWidths?: TableSettings['columnWidths']): void => {
     try {
       if (newColumnWidths) {
         tableSettings.value.columnWidths = newColumnWidths
@@ -435,7 +437,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const loadTableSettings = () => {
+  const loadTableSettings = (): TableSettings['columnWidths'] | null => {
     try {
       const settings = localStorageHelper.get<TableSettings>(LS_KEYS.TASKS_TABLE_SETTINGS)
       if (settings) {

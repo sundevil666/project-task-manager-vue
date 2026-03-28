@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useTaskStore, type Task } from '../store/tasks'
 import * as apiModule from '../services/api'
@@ -14,7 +14,7 @@ vi.mock('../services/api', () => ({
 }))
 
 vi.mock('vue-toastification', () => ({
-  useToast: () => ({
+  useToast: (): { success: Mock; error: Mock } => ({
     success: vi.fn(),
     error: vi.fn(),
   })

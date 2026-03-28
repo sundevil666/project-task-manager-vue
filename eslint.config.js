@@ -26,6 +26,8 @@ export default [
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/no-unused-vars': 'error',
       'vue/no-unused-vars': 'error',
+      '@typescript-eslint/explicit-function-return-type': 'error',
+      'vue/require-prop-types': 'error',
     },
   },
   {

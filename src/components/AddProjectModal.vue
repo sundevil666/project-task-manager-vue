@@ -95,7 +95,7 @@ const errors = reactive({
 
 const isSubmitting = ref(false)
 
-const initForm = () => {
+const initForm = (): void => {
   if (props.project) {
     formData.name = props.project.name
     formData.description = props.project.description
@@ -131,19 +131,19 @@ const validateForm = (): boolean => {
   return true
 }
 
-const closeModal = () => {
+const closeModal = (): void => {
   emit('close')
   resetForm()
 }
 
-const resetForm = () => {
+const resetForm = (): void => {
   formData.name = ''
   formData.description = ''
   formData.status = 'Planning'
   errors.name = ''
 }
 
-const saveProject = async () => {
+const saveProject = async (): Promise<void> => {
   if (!validateForm()) {
     return
   }
