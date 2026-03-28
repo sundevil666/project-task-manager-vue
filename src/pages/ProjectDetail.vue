@@ -313,7 +313,12 @@ const showDeleteConfirm = ref(false)
 const showTaskDeleteConfirm = ref(false)
 const taskToDelete = ref<number | null>(null)
 
-const handleTableReorder = async (event: { oldIndex: number; newIndex: number }): Promise<void> => {
+interface TableReorderEvent {
+  oldIndex: number
+  newIndex: number
+}
+
+const handleTableReorder = async (event: TableReorderEvent): Promise<void> => {
   const { oldIndex, newIndex } = event
   
   if (oldIndex !== newIndex) {

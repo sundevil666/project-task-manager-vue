@@ -53,6 +53,14 @@ import draggable from 'vuedraggable'
 import type { Task } from '../store/tasks'
 import { getUserNameById } from '../mocks/users'
 
+interface DragEndEvent {
+  item: HTMLElement
+  from: HTMLElement
+  to: HTMLElement
+  oldIndex: number
+  newIndex: number
+}
+
 const getAssigneeName = (assigneeId: number | undefined): string => {
   return getUserNameById(assigneeId) || 'Не призначено'
 }
@@ -69,14 +77,18 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const handleDragEnd = (event: { item: HTMLElement; from: HTMLElement; to: HTMLElement; oldIndex: number; newIndex: number }): void => {
+const handleDragEnd = (event: DragEndEvent): void => {
   const { item, from, to, oldIndex, newIndex } = event
   
   if (oldIndex === newIndex && from === to) {
     return
   }
   
-  const taskId = parseInt(item.dataset.id)
+  const taskIdAttr = item.dataset.id
+  if (!taskIdAttr) return
+  
+  const taskId = parseInt(taskIdAttr, 10)
+  if (isNaN(taskId)) return
   
   const toColumn = to.closest('.kanban-column')
   if (!toColumn) return
