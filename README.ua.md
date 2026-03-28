@@ -67,23 +67,31 @@ npm run test:ui    # Запуск з UI
 
 ## Деплой
 
-### Vercel (Рекомендовано)
+### GitHub Pages (Автоматично)
+
+Проєкт автоматично деплоїться на GitHub Pages при кожному пуші в `main`.
+
+**Як це працює:**
+- GitHub Actions workflow (`.github/workflows/deploy.yml`) запускається на кожен пуш в `main`
+- Встановлює залежності через `npm ci`
+- Збирає проєкт командою `npm run build`
+- Деплоїть папку `/dist` в гілку `gh-pages`
+- Сайт оновлюється автоматично за 1–2 хвилини
+
+**URL додатка:**  
+https://sundevil666.github.io/project-task-manager-vue/#/
+
+**Перше налаштування:**
+1. Перейдіть у **Settings → Pages** у вашому GitHub репозиторії
+2. Встановіть **Source** на `Deploy from a branch`
+3. Оберіть гілку `gh-pages` та папку `/ (root)`
+4. Натисніть **Save** — наступні пуші в `main` будуть автодеплоїтись
+
+### Vercel (Альтернатива)
 
 1. Запуште на GitHub
 2. Імпортуйте на [Vercel](https://vercel.com)
 3. Налаштування: Framework `Vite`, Build `npm run build`, Output `dist`
-
-### GitHub Pages
-
-```ts
-// vite.config.ts
-export default defineConfig({
-  base: '/project-task-manager-vue/',
-  // ...
-})
-```
-
-Увімкніть GitHub Pages у налаштуваннях репозиторію → Деплой через GitHub Actions
 
 ## Структура проєкту
 

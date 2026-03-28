@@ -67,23 +67,31 @@ npm run test:ui    # Run tests with UI
 
 ## Deployment
 
-### Vercel (Recommended)
+### GitHub Pages (Automated)
+
+The project automatically deploys to GitHub Pages on every push to `main`.
+
+**How it works:**
+- GitHub Actions workflow (`.github/workflows/deploy.yml`) triggers on each push to `main`
+- Installs dependencies with `npm ci`
+- Builds the project with `npm run build`
+- Deploys the `/dist` folder to the `gh-pages` branch
+- Site updates automatically within 1–2 minutes
+
+**Live URL:**  
+https://sundevil666.github.io/project-task-manager-vue/#/
+
+**First-time setup:**
+1. Go to **Settings → Pages** in your GitHub repo
+2. Set **Source** to `Deploy from a branch`
+3. Select `gh-pages` branch and `/ (root)` folder
+4. Click **Save** — subsequent pushes to `main` will auto-deploy
+
+### Vercel (Alternative)
 
 1. Push to GitHub
 2. Import on [Vercel](https://vercel.com)
 3. Settings: Framework `Vite`, Build `npm run build`, Output `dist`
-
-### GitHub Pages
-
-```ts
-// vite.config.ts
-export default defineConfig({
-  base: '/project-task-manager-vue/',
-  // ...
-})
-```
-
-Enable GitHub Pages in repo settings → Deploy via GitHub Actions
 
 ## Project Structure
 
