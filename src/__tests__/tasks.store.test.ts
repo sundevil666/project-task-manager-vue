@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useTaskStore, type Task } from '../store/tasks'
 import * as apiModule from '../services/api'
+import type { AxiosResponse } from 'axios'
 
 vi.mock('../services/api', () => ({
   api: {
@@ -29,7 +30,7 @@ describe('useTaskStore', () => {
     description: 'Description 1',
     status: 'todo',
     priority: 'High',
-    assignee: 'User 1',
+    assignee: 1,
     dueDate: '2024-01-01',
     createdDate: '2024-01-01',
     order: 0
@@ -42,7 +43,7 @@ describe('useTaskStore', () => {
     description: 'Description 2',
     status: 'in-progress',
     priority: 'Medium',
-    assignee: 'User 2',
+    assignee: 2,
     dueDate: '2024-01-02',
     createdDate: '2024-01-02',
     order: 1
@@ -77,7 +78,7 @@ describe('useTaskStore', () => {
         { ...mockTask1, status: 'Pending' as const },
         { ...mockTask2, status: 'In Progress' as const }
       ]
-      vi.mocked(apiModule.api.getTasks).mockResolvedValue({ data: apiTasks, status: 200, statusText: 'OK', headers: {}, config: {} as any })
+      vi.mocked(apiModule.api.getTasks).mockResolvedValue({ data: apiTasks, status: 200, statusText: 'OK', headers: {}, config: {} } as unknown as AxiosResponse)
 
       await store.fetchTasks()
 
@@ -99,7 +100,7 @@ describe('useTaskStore', () => {
 
     it('should fetch tasks for specific project', async () => {
       const apiTasks = [{ ...mockTask1, status: 'Pending' as const }]
-      vi.mocked(apiModule.api.getTasks).mockResolvedValue({ data: apiTasks, status: 200, statusText: 'OK', headers: {}, config: {} as any })
+      vi.mocked(apiModule.api.getTasks).mockResolvedValue({ data: apiTasks, status: 200, statusText: 'OK', headers: {}, config: {} } as unknown as AxiosResponse)
 
       await store.fetchTasks(1)
 
@@ -121,7 +122,7 @@ describe('useTaskStore', () => {
         title: 'Task 1',
         description: 'Description 1',
         priority: 'High' as const,
-        assignee: 'User 1',
+        assignee: 1,
         dueDate: '2024-01-01',
         status: 'todo' as const
       }
@@ -131,8 +132,8 @@ describe('useTaskStore', () => {
         status: 200, 
         statusText: 'OK', 
         headers: {}, 
-        config: {} as any 
-      })
+        config: {} 
+      } as unknown as AxiosResponse)
 
       const result = await store.addTask(taskData)
 
@@ -152,7 +153,7 @@ describe('useTaskStore', () => {
         title: 'New Task',
         description: 'New Desc',
         priority: 'Low' as const,
-        assignee: 'User 3',
+        assignee: 3,
         dueDate: '2024-01-03',
         status: 'todo' as const
       }
@@ -164,7 +165,7 @@ describe('useTaskStore', () => {
           title: 'New Task',
           description: 'New Desc',
           priority: 'Low' as const,
-          assignee: 'User 3',
+          assignee: 3,
           dueDate: '2024-01-03',
           createdDate: '2024-01-03',
           status: 'Pending' as const,
@@ -173,8 +174,8 @@ describe('useTaskStore', () => {
         status: 200, 
         statusText: 'OK', 
         headers: {}, 
-        config: {} as any 
-      })
+        config: {} 
+      } as unknown as AxiosResponse)
 
       const result = await store.addTask(taskData)
 
@@ -189,7 +190,7 @@ describe('useTaskStore', () => {
         title: 'Test',
         description: 'Test',
         priority: 'Low' as const,
-        assignee: 'Test',
+        assignee: 999,
         dueDate: '2024-01-01',
         status: 'todo' as const
       })).rejects.toThrow('Create failed')
@@ -205,8 +206,8 @@ describe('useTaskStore', () => {
         status: 200, 
         statusText: 'OK', 
         headers: {}, 
-        config: {} as any 
-      })
+        config: {} 
+      } as unknown as AxiosResponse)
 
       const result = await store.updateTask(1, { title: 'Updated Title', status: 'done' })
 
@@ -223,8 +224,8 @@ describe('useTaskStore', () => {
         status: 200, 
         statusText: 'OK', 
         headers: {}, 
-        config: {} as any 
-      })
+        config: {} 
+      } as unknown as AxiosResponse)
 
       await store.updateTask(1, { title: 'Updated' })
 
@@ -237,8 +238,8 @@ describe('useTaskStore', () => {
         status: 200, 
         statusText: 'OK', 
         headers: {}, 
-        config: {} as any 
-      })
+        config: {} 
+      } as unknown as AxiosResponse)
 
       const result = await store.updateTask(999, { title: 'Updated' })
 
@@ -255,7 +256,7 @@ describe('useTaskStore', () => {
   describe('deleteTask', () => {
     it('should remove task from state', async () => {
       store.tasks = [mockTask1, mockTask2]
-      vi.mocked(apiModule.api.deleteTask).mockResolvedValue({ data: true, status: 200, statusText: 'OK', headers: {}, config: {} as any })
+      vi.mocked(apiModule.api.deleteTask).mockResolvedValue({ data: true, status: 200, statusText: 'OK', headers: {}, config: {} } as unknown as AxiosResponse)
 
       await store.deleteTask(1)
 
@@ -312,10 +313,10 @@ describe('useTaskStore', () => {
 
   describe('filters', () => {
     it('setFilters should update filters', () => {
-      store.setFilters({ status: 'todo', assignee: 'User 1' })
+      store.setFilters({ status: 'todo', assignee: 1 })
 
       expect(store.filters.status).toBe('todo')
-      expect(store.filters.assignee).toBe('User 1')
+      expect(store.filters.assignee).toBe(1)
     })
 
     it('clearFilters should reset filters', () => {

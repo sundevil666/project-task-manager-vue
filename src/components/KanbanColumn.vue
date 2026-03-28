@@ -69,7 +69,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const handleDragEnd = (event: any) => {
+const handleDragEnd = (event: { item: HTMLElement; from: HTMLElement; to: HTMLElement; oldIndex: number; newIndex: number }) => {
   const { item, from, to, oldIndex, newIndex } = event
   
   if (oldIndex === newIndex && from === to) {

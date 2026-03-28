@@ -6,6 +6,7 @@ import { createPersistence, LS_KEYS, localStorageHelper } from '../utils/localSt
 import { useToast } from 'vue-toastification'
 import { mockTasks } from '../mocks/tasks'
 import { getUserNameById } from '../mocks/users'
+import {ITask} from "../types";
 
 export interface Task extends Omit<ApiTask, 'status'> {
   status: 'todo' | 'in-progress' | 'done'
@@ -63,7 +64,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const mapTaskStatusToApiStatus = (taskStatus: Task['status']): string => {
+  const mapTaskStatusToApiStatus = (taskStatus: Task['status']): ITask['status'] => {
     switch (taskStatus) {
       case 'todo': return 'Pending'
       case 'in-progress': return 'In Progress'
@@ -137,8 +138,8 @@ export const useTaskStore = defineStore('tasks', () => {
           return a.order - b.order
         }
         
-        let aValue: any
-        let bValue: any
+        let aValue: string | number | Date
+        let bValue: string | number | Date
 
         switch (column) {
           case 'id':
@@ -283,9 +284,10 @@ export const useTaskStore = defineStore('tasks', () => {
   const updateTask = async (id: number, updates: Partial<Omit<Task, 'id' | 'createdDate' | 'projectId'>>) => {
     loading.value = true
     try {
-      const apiUpdates: any = { ...updates }
-      if (updates.status) {
-        apiUpdates.status = mapTaskStatusToApiStatus(updates.status)
+      const { status, ...restUpdates } = updates
+      const apiUpdates: Partial<ApiTask> & { status?: ApiTask['status'] } = { ...restUpdates }
+      if (status) {
+        apiUpdates.status = mapTaskStatusToApiStatus(status) as ApiTask['status']
       }
 
       const response = await api.updateTask(id, apiUpdates)

@@ -262,7 +262,6 @@ import TaskModal from '../components/TaskModal.vue'
 import KanbanColumn from '../components/KanbanColumn.vue'
 import type { Task } from '../store/tasks'
 import { localStorageHelper, LS_KEYS } from '../utils/localStorage'
-import type { TableSettings } from '../store/tasks'
 import draggable from 'vuedraggable'
 import { getUserNameById, mockUsers } from '../mocks/users'
 import { handleError } from '../utils/errorHandler'
@@ -314,7 +313,7 @@ const showDeleteConfirm = ref(false)
 const showTaskDeleteConfirm = ref(false)
 const taskToDelete = ref<number | null>(null)
 
-const handleTableReorder = async (event: any) => {
+const handleTableReorder = async (event: { oldIndex: number; newIndex: number }) => {
   const { oldIndex, newIndex } = event
   
   if (oldIndex !== newIndex) {
@@ -395,7 +394,7 @@ const hasActiveFilters = computed(() => {
 watch([assigneeFilter, statusFilter], ([newAssignee, newStatus]) => {
   taskStore.setFilters({
     assignee: newAssignee,
-    status: newStatus as any || undefined
+    status: newStatus as Task['status'] || undefined
   })
 })
 

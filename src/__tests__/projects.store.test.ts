@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useProjectsStore } from '../store/projects'
 import * as apiModule from '../services/api'
+import type { AxiosResponse } from 'axios'
 
 vi.mock('../services/api', () => ({
   api: {
@@ -54,7 +55,7 @@ describe('useProjectsStore', () => {
         { id: 1, name: 'Project 1', description: 'Desc 1', status: 'Planning' as const, createdDate: '2024-01-01', taskCount: 0 },
         { id: 2, name: 'Project 2', description: 'Desc 2', status: 'In Progress' as const, createdDate: '2024-01-02', taskCount: 0 }
       ]
-      vi.mocked(apiModule.api.getProjects).mockResolvedValue({ data: mockProjects, status: 200, statusText: 'OK', headers: {}, config: {} as any })
+      vi.mocked(apiModule.api.getProjects).mockResolvedValue({ data: mockProjects, status: 200, statusText: 'OK', headers: {}, config: {} } as unknown as AxiosResponse)
 
       await store.fetchProjects()
 
@@ -82,7 +83,7 @@ describe('useProjectsStore', () => {
   describe('addProject', () => {
     it('should add project to state and save to localStorage', async () => {
       const newProject = { id: 3, name: 'New Project', description: 'New Desc', status: 'Planning' as const, createdDate: '2024-01-03', taskCount: 0 }
-      vi.mocked(apiModule.api.createProject).mockResolvedValue({ data: newProject, status: 200, statusText: 'OK', headers: {}, config: {} as any })
+      vi.mocked(apiModule.api.createProject).mockResolvedValue({ data: newProject, status: 200, statusText: 'OK', headers: {}, config: {} } as unknown as AxiosResponse)
 
       const result = await store.addProject({ name: 'New Project', description: 'New Desc' })
 
@@ -109,7 +110,7 @@ describe('useProjectsStore', () => {
       ]
       store.projects = [...projects]
       store.saveToStorage()
-      vi.mocked(apiModule.api.deleteProject).mockResolvedValue({ data: true, status: 200, statusText: 'OK', headers: {}, config: {} as any })
+      vi.mocked(apiModule.api.deleteProject).mockResolvedValue({ data: true, status: 200, statusText: 'OK', headers: {}, config: {} } as unknown as AxiosResponse)
 
       await store.deleteProject(1)
 

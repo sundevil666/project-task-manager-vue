@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios'
 import { mockApi, CreateProjectRequest, CreateTaskRequest } from './mockApi'
 import { IProject } from '../mocks/projects'
 import { ITask } from '../mocks/tasks'
@@ -26,8 +26,8 @@ const mockResponse = <T>(data: T): Promise<AxiosResponse<T>> => {
     status: 200,
     statusText: 'OK',
     headers: {},
-    config: {} as any,
-  })
+    config: {} as unknown as AxiosRequestConfig,
+  } as unknown as AxiosResponse<T>)
 }
 
 export const api = {
