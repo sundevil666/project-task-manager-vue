@@ -579,9 +579,7 @@ const deleteProject = async (): Promise<void> => {
 const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrder: number): Promise<void> => {
   try {
     await taskStore.updateTask(taskId, { status: newStatus })
-    
-    taskStore.setSort({ column: 'order', direction: 'asc' })
-    
+
     const allProjectTasks = taskStore.getTasksByProjectId(projectId.value)
     
     const statusGroups = {
