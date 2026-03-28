@@ -258,6 +258,7 @@ export const useTaskStore = defineStore('tasks', () => {
         title: taskData.title,
         description: taskData.description || '',
         priority: taskData.priority,
+        status: mapTaskStatusToApiStatus(taskData.status),
         assignee: taskData.assignee,
         dueDate: taskData.dueDate
       }

@@ -41,6 +41,7 @@ export interface CreateTaskRequest {
   projectId: number
   title: string
   description: string
+  status?: ITask['status']
   priority: ITask['priority']
   assignee?: number
   dueDate?: string
@@ -150,7 +151,7 @@ export const mockApi = {
       priority: taskData.priority,
       assignee: taskData.assignee,
       dueDate: taskData.dueDate,
-      status: 'Pending',
+      status: taskData.status || 'Pending',
       createdDate: new Date().toISOString().split('T')[0],
       order: tasks.filter(t => t.projectId === taskData.projectId).length
     }
