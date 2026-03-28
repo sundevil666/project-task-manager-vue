@@ -17,7 +17,7 @@ export interface TaskFilters {
 }
 
 export interface TaskSort {
-  column: 'status' | 'dueDate' | 'title' | 'assignee' | 'order'
+  column: 'status' | 'dueDate' | 'title' | 'assignee' | 'order' | 'id'
   direction: 'asc' | 'desc'
 }
 
@@ -25,6 +25,7 @@ export interface TableSettings {
   sort: TaskSort
   filters: TaskFilters
   columnWidths: {
+    id: number
     title: number
     assignee: number
     status: number
@@ -141,6 +142,10 @@ export const useTaskStore = defineStore('tasks', () => {
         let bValue: any
 
         switch (column) {
+          case 'id':
+            aValue = a.id
+            bValue = b.id
+            break
           case 'status':
             aValue = a.status
             bValue = b.status
@@ -402,6 +407,7 @@ export const useTaskStore = defineStore('tasks', () => {
         sort: sort.value,
         filters: filters.value,
         columnWidths: columnWidths || {
+          id: 80,
           title: 300,
           assignee: 150,
           status: 120,

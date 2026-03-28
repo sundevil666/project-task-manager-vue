@@ -71,6 +71,17 @@
           <table v-else class="tasks-table">
             <thead>
               <tr>
+                <th
+                  @click="handleSort('id')"
+                  class="sortable-header id-header"
+                  :style="{ width: columnWidths.id + 'px' }"
+                >
+                  ID завдання
+                  <span class="sort-indicator" v-if="sort.column === 'id'">
+                    {{ sort.direction === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 'id')"></div>
+                </th>
                 <th 
                   @click="handleSort('title')" 
                   class="sortable-header"
@@ -117,6 +128,7 @@
                 </th>
               </tr>
               <tr v-if="sort.column === 'order'" class="manual-sort-indicator">
+                <td class="manual-sort-notice"></td>
                 <td :colspan="4" class="manual-sort-notice">
                   🔀 Ручне сортування (перетягніть задачі для зміни порядку)
                 </td>
@@ -134,6 +146,7 @@
             >
               <template #item="{ element: task }">
                 <tr :key="task.id" class="draggable-row">
+                  <td :style="{ width: columnWidths.id + 'px' }" class="task-id">{{ task.id }}</td>
                   <td :style="{ width: columnWidths.title + 'px' }" @click="openEditModal(task)" class="task-title">{{ task.title }}</td>
                   <td :style="{ width: columnWidths.assignee + 'px' }">{{ task.assignee || '-' }}</td>
                   <td :style="{ width: columnWidths.status + 'px' }">
@@ -847,6 +860,13 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
           &:hover {
             text-decoration: underline;
           }
+        }
+        
+        .task-id {
+          text-align: center;
+          font-weight: 600;
+          color: #666;
+          font-size: 0.9rem;
         }
       }
       
