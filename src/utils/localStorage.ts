@@ -14,7 +14,7 @@ export const localStorageHelper = {
     try {
       localStorage.setItem(key, JSON.stringify(value))
     } catch (error) {
-      console.log(error)
+      console.error(`Failed to set localStorage key "${key}":`, error)
     }
   },
 
@@ -22,7 +22,7 @@ export const localStorageHelper = {
     try {
       localStorage.removeItem(key)
     } catch (error) {
-      console.log(error)
+      console.error(`Failed to remove localStorage key "${key}":`, error)
     }
   },
 
@@ -30,7 +30,7 @@ export const localStorageHelper = {
     try {
       localStorage.clear()
     } catch (error) {
-      console.log(error)
+      console.error('Failed to clear localStorage:', error)
     }
   }
 }

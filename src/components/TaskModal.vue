@@ -100,6 +100,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { useTaskStore } from '../store/tasks'
 import type { Task } from '../store/tasks'
 import { mockUsers } from '../mocks/users'
+import { handleError } from '../utils/errorHandler'
 
 interface Props {
   isOpen: boolean
@@ -234,7 +235,7 @@ const handleSubmit = async () => {
 
     closeModal()
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при збереженні задачі' })
   } finally {
     isLoading.value = false
   }
@@ -256,7 +257,7 @@ const handleDelete = async () => {
     await taskStore.deleteTask(props.task.id)
     closeModal()
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при видаленні задачі' })
   } finally {
     isLoading.value = false
   }

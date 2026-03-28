@@ -15,7 +15,8 @@
     </td>
   </tr>
   
-  <div v-if="showConfirm" class="modal-overlay">
+  <Teleport to="body">
+    <div v-if="showConfirm" class="modal-overlay">
     <div class="confirm-modal">
       <h3>Видалити проєкт?</h3>
       <p>Ви впевнені, що хочете видалити проєкт "{{ project.name }}"?</p>
@@ -25,7 +26,8 @@
         <button @click="deleteProject" class="confirm-delete-btn">Видалити</button>
       </div>
     </div>
-  </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -34,6 +36,7 @@ import { useRouter } from 'vue-router'
 import { useProjectsStore } from '../store/projects'
 import { useTaskStore } from '../store/tasks'
 import type { IProject } from '../mocks/projects'
+import { handleError } from '../utils/errorHandler'
 
 const props = defineProps<{
   project: IProject
@@ -92,7 +95,7 @@ const deleteProject = async () => {
     
     showConfirm.value = false
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при видаленні проєкту' })
   }
 }
 </script>

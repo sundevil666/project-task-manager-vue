@@ -234,7 +234,8 @@ export const useTaskStore = defineStore('tasks', () => {
       
       saveToStorage()
     } catch (error) {
-      console.log(error)
+      toast.error('Помилка при завантаженні задач')
+      console.error(error)
       throw error
     } finally {
       loading.value = false
@@ -339,7 +340,8 @@ export const useTaskStore = defineStore('tasks', () => {
         try {
           await api.deleteTask(task.id)
         } catch (error) {
-          console.log(error)
+          toast.error(`Помилка при видаленні задачі #${task.id}`)
+          console.error(error)
         }
       }
       
@@ -371,7 +373,8 @@ export const useTaskStore = defineStore('tasks', () => {
       saveToStorage()
       return true
     } catch (error) {
-      console.log(error)
+      toast.error('Помилка при зміні порядку задач')
+      console.error(error)
     } finally {
       loading.value = false
     }
@@ -425,7 +428,8 @@ export const useTaskStore = defineStore('tasks', () => {
       }
       localStorageHelper.set(LS_KEYS.TASKS_TABLE_SETTINGS, settings)
     } catch (error) {
-      console.log(error)
+      toast.error('Помилка при збереженні налаштувань таблиці')
+      console.error(error)
     }
   }
 
@@ -443,7 +447,8 @@ export const useTaskStore = defineStore('tasks', () => {
         return settings.columnWidths
       }
     } catch (error) {
-      console.log(error)
+      toast.error('Помилка при завантаженні налаштувань таблиці')
+      console.error(error)
     }
     return null
   }

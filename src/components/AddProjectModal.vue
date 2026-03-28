@@ -68,6 +68,7 @@
 import { ref, reactive, watch, computed } from 'vue'
 import { useProjectsStore } from '../store/projects'
 import type { IProject } from '../mocks/projects'
+import { handleError } from '../utils/errorHandler'
 
 const props = defineProps<{
   isOpen: boolean
@@ -166,7 +167,7 @@ const saveProject = async () => {
     
     closeModal()
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при збереженні проєкту' })
   } finally {
     isSubmitting.value = false
   }

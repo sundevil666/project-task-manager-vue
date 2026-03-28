@@ -265,6 +265,7 @@ import { localStorageHelper, LS_KEYS } from '../utils/localStorage'
 import type { TableSettings } from '../store/tasks'
 import draggable from 'vuedraggable'
 import { getUserNameById, mockUsers } from '../mocks/users'
+import { handleError } from '../utils/errorHandler'
 
 const router = useRouter()
 const route = useRoute()
@@ -458,12 +459,6 @@ const goBack = () => {
   router.push('/')
 }
 
-onMounted(async () => {
-  if (projectId.value) {
-    await taskStore.fetchTasks(projectId.value)
-  }
-})
-
 watch(() => route.params.id, async (newId, oldId) => {
   if (newId && newId !== oldId) {
     await taskStore.fetchTasks(Number(newId))
@@ -507,7 +502,7 @@ const confirmDeleteTask = async () => {
   try {
     await taskStore.deleteTask(taskToDelete.value)
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при видаленні задачі' })
   } finally {
     taskToDelete.value = null
     showTaskDeleteConfirm.value = false
@@ -537,7 +532,7 @@ const deleteProject = async () => {
     
     router.push('/')
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при видаленні проєкту' })
   }
 }
 
@@ -582,7 +577,7 @@ const handleTaskMove = async (taskId: number, newStatus: Task['status'], newOrde
     
     await taskStore.reorderTasks(reorderedTasks)
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при переміщенні задачі' })
   }
 }
 
@@ -631,7 +626,7 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
     
     await taskStore.reorderTasks(reorderedTasks)
   } catch (error) {
-    console.log(error)
+    handleError(error, { message: 'Помилка при зміні порядку задач' })
   }
 }
 </script>
@@ -824,6 +819,7 @@ const handleTaskReorder = async (taskId: number, newOrder: number) => {
 }
 
 .table-view {
+  overflow: auto;
   .loading-state,
   .empty-state {
     text-align: center;
