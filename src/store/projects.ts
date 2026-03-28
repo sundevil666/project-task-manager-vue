@@ -83,9 +83,9 @@ export const useProjectsStore = defineStore('projects', () => {
       }
       toast.success('Проект успешно удален')
       return true
-    } catch {
+    } catch (error) {
       toast.error('Ошибка при удалении проекта')
-      return false
+      throw error
     } finally {
       appStore.setLoading(false)
     }
